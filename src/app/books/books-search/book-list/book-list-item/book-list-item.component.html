@@ -1,0 +1,23 @@
+<article class="book-item">
+  <div class="book-item__cover book-cover padding--md">
+    <img [src]="book?.cover" class="book-cover__image" />
+  </div>
+
+  <div class="book-item__info book-info">
+    <h4 class="book-info__title"><a [routerLink]="['/books', book?.isbn]">{{ book?.title }}</a></h4>
+    <div class="book-info__summary">
+      <p *ngFor="let synopsisParagraph of book?.synopsis">
+        {{ synopsisParagraph }}
+      </p>
+    </div>
+  </div>
+
+  <div class="book-item__action book-action text-center padding--md">
+    <div class="book-action__price">
+      <strong>{{ book?.price }}€</strong>
+    </div>
+    <div class="book-action__add">
+      <button (click)="addToCart.emit(book)">Add to Cart</button>
+    </div>
+  </div>
+</article>

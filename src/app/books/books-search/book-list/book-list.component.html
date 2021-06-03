@@ -1,0 +1,5 @@
+<app-book-list-item *ngFor="let book of books"
+                    class="book-list__list-item margin--horizontal--lg"
+                    [book]="book"
+                    (addToCart)="addToCart.emit(book)">
+</app-book-list-item>

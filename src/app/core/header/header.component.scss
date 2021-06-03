@@ -1,0 +1,30 @@
+.page-header {
+  display: flex;
+
+  position: sticky;
+  top: 0;
+
+  border-bottom: 1px solid;
+
+  &__title {
+    font-size: 1rem;
+
+    margin: 0;
+    padding: 5px;
+
+    a {
+      text-decoration: none;
+    }
+  }
+
+  &__action {
+    display: block;
+    padding: 5px;
+
+    text-decoration: none;
+  }
+}
+
+.spacer {
+  flex-grow: 1;
+}

@@ -1,0 +1,6 @@
+<ng-container *ngIf="_books$ | async as books">
+  <app-book-list [books]="books"
+               (addToCart)="onAddToCart($event)">
+  </app-book-list>
+</ng-container>
+
