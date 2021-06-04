@@ -1,14 +1,28 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideMockStore } from '@ngrx/store/testing';
 
 import { ShoppingCartComponent } from './shopping-cart.component';
+import { AppState } from '../../../app.state';
 
-describe('ShoppingCartSummaryComponent', () => {
+describe('ShoppingCartComponent', () => {
   let component: ShoppingCartComponent;
   let fixture: ComponentFixture<ShoppingCartComponent>;
+  const initialState: AppState = {
+    shoppingCart: {
+      items: []
+    }
+  };
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ ShoppingCartComponent ]
+      imports: [
+        HttpClientTestingModule
+      ],
+      declarations: [ ShoppingCartComponent ],
+      providers: [
+        provideMockStore({ initialState })
+      ]
     })
     .compileComponents();
   });

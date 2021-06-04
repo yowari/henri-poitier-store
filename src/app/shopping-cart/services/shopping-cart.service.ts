@@ -8,7 +8,7 @@ import { BestOffer, Offer } from '../models/commercial-offers';
 export class ShoppingCartService {
 
   getBestOffer(total: number, offers: Offer[]): BestOffer {
-    const discounts = offers.map(offer => this.calculateDiscount(total, offer));
+    const discounts = offers.map(offer => this.getDiscount(total, offer));
     let minimalPriceIndex = 0;
 
     for (let i = 0; i < discounts.length; i++) {
@@ -23,7 +23,7 @@ export class ShoppingCartService {
     };
   }
 
-  calculateDiscount(total: number, offer: Offer): number {
+  getDiscount(total: number, offer: Offer): number {
     switch (offer.type) {
       case 'minus':
         return offer.value;

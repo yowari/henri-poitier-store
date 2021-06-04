@@ -16,10 +16,21 @@ describe('HeaderComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(HeaderComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
+  it('should show the items count in the cart button when the counter is > 0', () => {
+    component.itemsCount = 1;
+    fixture.detectChanges();
+
+    const itemCountElement = fixture.nativeElement.querySelector('.items-count');
+    expect(itemCountElement.textContent).toBe('1');
+  });
+
+  it('should not show the items count in the cart button when the counter is 0', () => {
+    component.itemsCount = 0;
+    fixture.detectChanges();
+
+    const itemCountElement = fixture.nativeElement.querySelector('.items-count');
+    expect(itemCountElement).toBeNull();
   });
 });

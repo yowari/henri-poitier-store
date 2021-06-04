@@ -2,6 +2,6 @@
   <div class="container-fluid">
     <a class="navbar-brand" routerLink="/">Henri Potier Store</a>
 
-    <a class="btn btn-outline-primary" routerLink="/shopping-cart"><span *ngIf="_itemsCount$ | async as itemsCount" class="badge rounded-pill bg-primary">{{ itemsCount }}</span> Panier</a>
+    <a class="btn btn-outline-primary" routerLink="/shopping-cart"><span *ngIf="itemsCount" class="items-count badge rounded-pill bg-primary">{{ itemsCount }}</span> Panier</a>
   </div>
 </header>
