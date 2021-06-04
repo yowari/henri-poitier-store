@@ -2,7 +2,8 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 
-import * as FromRoot from '../../app.state';
+import { AppState } from '../../app.state';
+import * as FromShoppingCart from '../../shopping-cart/store/shopping-cart.selectors';
 
 @Component({
   selector: 'app-header',
@@ -14,8 +15,8 @@ export class HeaderComponent {
 
   _itemsCount$: Observable<number>;
 
-  constructor(private _store: Store<FromRoot.AppState>) {
-    this._itemsCount$ = this._store.select(FromRoot.getShoppingCartItemsCount);
+  constructor(private _store: Store<AppState>) {
+    this._itemsCount$ = this._store.select(FromShoppingCart.getShoppingCartItemsCount);
   }
 
 }

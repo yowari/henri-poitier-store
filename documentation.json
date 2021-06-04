@@ -1,19 +1,92 @@
 {
-    "pipes": [],
+    "pipes": [
+        {
+            "name": "SearchBooksPipe",
+            "id": "pipe-SearchBooksPipe-4fe5603bb37165340748ead95aa59cc3",
+            "file": "src/app/books/pipes/search-books.pipe.ts",
+            "type": "pipe",
+            "description": "",
+            "properties": [],
+            "methods": [
+                {
+                    "name": "transform",
+                    "args": [
+                        {
+                            "name": "books",
+                            "type": "Book[]"
+                        },
+                        {
+                            "name": "searchText",
+                            "type": "string"
+                        }
+                    ],
+                    "optional": false,
+                    "returnType": "Book[]",
+                    "typeParameters": [],
+                    "line": 11,
+                    "jsdoctags": [
+                        {
+                            "name": "books",
+                            "type": "Book[]",
+                            "tagName": {
+                                "text": "param"
+                            }
+                        },
+                        {
+                            "name": "searchText",
+                            "type": "string",
+                            "tagName": {
+                                "text": "param"
+                            }
+                        }
+                    ]
+                }
+            ],
+            "pure": true,
+            "ngname": "searchBooks",
+            "sourceCode": "import { Pipe, PipeTransform } from '@angular/core';\n\nimport { Book } from '../../api/books';\n\n@Pipe({\n  name: 'searchBooks',\n  pure: true\n})\nexport class SearchBooksPipe implements PipeTransform {\n\n  transform(books: Book[], searchText: string): Book[] {\n    const lowerSearchText = searchText.toLocaleLowerCase();\n    return books.filter(book => book.title.toLocaleLowerCase().includes(lowerSearchText) || book.synopsis.some(s => s.toLocaleLowerCase().includes(lowerSearchText)));\n  }\n\n}\n"
+        }
+    ],
     "interfaces": [
         {
             "name": "AppState",
-            "id": "interface-AppState-0032e515521c2c3ee7e4029d5bc77bb0",
+            "id": "interface-AppState-99aa802931915cd0ee6e5efb00637cc3",
             "file": "src/app/app.state.ts",
             "type": "interface",
-            "sourceCode": "import { createSelector } from '@ngrx/store';\nimport { ShoppingCartState } from './shopping-cart/store/shopping-cart.reducer';\n\nexport interface AppState {\n  shoppingCart: ShoppingCartState\n}\n\nexport const getShoppingCartState = (state: AppState) => state.shoppingCart;\n\nexport const getShoppingCartItems = createSelector(\n  getShoppingCartState,\n  (shoppingCartState: ShoppingCartState) => shoppingCartState.items\n);\n\nexport const getShoppingCartItemsCount = createSelector(\n  getShoppingCartState,\n  (shoppingCartState: ShoppingCartState) => {\n    return shoppingCartState.items.reduce((acc, item) => acc + item.quantity, 0);\n  }\n);\n",
+            "sourceCode": "import { createSelector } from '@ngrx/store';\nimport { ShoppingCartItem } from './shopping-cart/store/shopping-cart';\nimport { ShoppingCartState } from './shopping-cart/store/shopping-cart.reducer';\n\nexport interface AppState {\n  shoppingCart: ShoppingCartState\n}\n\nexport const getShoppingCartState = (state: AppState) => state.shoppingCart;\n\nexport const getShoppingCartItems = createSelector(\n  getShoppingCartState,\n  (shoppingCartState: ShoppingCartState) => shoppingCartState.items\n);\n\nexport const getTotalPrice = createSelector(\n  getShoppingCartItems,\n  (items: ShoppingCartItem[]) => items.reduce((acc, item) => acc + (item.quantity * item.book.price), 0)\n);\n\nexport const getShoppingCartItemsCount = createSelector(\n  getShoppingCartState,\n  (shoppingCartState: ShoppingCartState) => {\n    return shoppingCartState.items.reduce((acc, item) => acc + item.quantity, 0);\n  }\n);\n\nexport const getShoppingCartItemQuantity = (isbn: string) => {\n  return createSelector(\n    getShoppingCartState,\n    (shoppingCartState: ShoppingCartState) => {\n      const item = shoppingCartState.items.find(i => i.book.isbn === isbn);\n\n      if (item) {\n        return item.quantity;\n      } else {\n        return 0;\n      }\n    }\n  );\n};\n",
             "properties": [
                 {
                     "name": "shoppingCart",
                     "type": "ShoppingCartState",
                     "optional": false,
                     "description": "",
-                    "line": 5
+                    "line": 6
+                }
+            ],
+            "indexSignatures": [],
+            "kind": 150,
+            "methods": []
+        },
+        {
+            "name": "BestOffer",
+            "id": "interface-BestOffer-31eea59e66f995c9ce265c44819467b6",
+            "file": "src/app/shopping-cart/services/shopping-cart.service.ts",
+            "type": "interface",
+            "sourceCode": "import { Injectable } from '@angular/core';\n\nimport { Offer } from '../../api/books';\n\nexport interface BestOffer {\n  offer: Offer;\n  discount: number;\n}\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class ShoppingCartService {\n\n  constructor() { }\n\n  getBestOffer(total: number, offers: Offer[]): BestOffer {\n    const discounts = offers.map(offer => this.getDiscount(total, offer));\n    let minimalPriceIndex = 0;\n\n    for (let i = 0; i < discounts.length; i++) {\n      if (discounts[i] > discounts[minimalPriceIndex]) {\n        minimalPriceIndex = i;\n      }\n    }\n\n    return {\n      offer: offers[minimalPriceIndex],\n      discount: discounts[minimalPriceIndex]\n    };\n  }\n\n  getDiscount(total: number, offer: Offer): number {\n    switch (offer.type) {\n      case 'minus':\n        return offer.value;\n      case 'percentage':\n        return total * (offer.value / 100);\n      case 'slice':\n          return Math.floor(total / offer.sliceValue) * offer.value;\n      default:\n        throw new Error('Unrecognized offer type');\n    }\n  }\n\n  // applyOffer(total: number, offer: Offer): number {\n  //   switch (offer.type) {\n  //     case 'minus':\n  //       return total - offer.value;\n  //     case 'percentage':\n  //       return total - (total * (offer.value / 100));\n  //     case 'slice':\n  //         return total - (Math.floor(total / offer.sliceValue) * offer.value);\n  //     default:\n  //       return total;\n  //   }\n  // }\n}\n",
+            "properties": [
+                {
+                    "name": "discount",
+                    "type": "number",
+                    "optional": false,
+                    "description": "",
+                    "line": 7
+                },
+                {
+                    "name": "offer",
+                    "type": "Offer",
+                    "optional": false,
+                    "description": "",
+                    "line": 6
                 }
             ],
             "indexSignatures": [],
@@ -22,10 +95,10 @@
         },
         {
             "name": "Book",
-            "id": "interface-Book-a44665579e1e2a9255b78a48d29a707d",
+            "id": "interface-Book-d1ff7ccaf7a1089957eca8e3c0ed88c7",
             "file": "src/app/api/books.ts",
             "type": "interface",
-            "sourceCode": "export interface Book {\n  isbn: string;\n  title: string;\n  price: number;\n  cover: string;\n  synopsis: string[];\n}\n",
+            "sourceCode": "export interface Book {\n  isbn: string;\n  title: string;\n  price: number;\n  cover: string;\n  synopsis: string[];\n}\n\nexport interface CommercialOffers {\n  offers: Offer[];\n}\n\nexport type Offer = PercentageOffer | MinusOffer | SliceOffer;\n\nexport interface PercentageOffer {\n  type: 'percentage';\n  value: number;\n}\n\nexport interface MinusOffer {\n  type: 'minus';\n  value: number;\n}\n\nexport interface SliceOffer {\n  type: 'slice';\n  value: number;\n  sliceValue: number;\n}\n",
             "properties": [
                 {
                     "name": "cover",
@@ -68,6 +141,77 @@
             "methods": []
         },
         {
+            "name": "CommercialOffers",
+            "id": "interface-CommercialOffers-d1ff7ccaf7a1089957eca8e3c0ed88c7",
+            "file": "src/app/api/books.ts",
+            "type": "interface",
+            "sourceCode": "export interface Book {\n  isbn: string;\n  title: string;\n  price: number;\n  cover: string;\n  synopsis: string[];\n}\n\nexport interface CommercialOffers {\n  offers: Offer[];\n}\n\nexport type Offer = PercentageOffer | MinusOffer | SliceOffer;\n\nexport interface PercentageOffer {\n  type: 'percentage';\n  value: number;\n}\n\nexport interface MinusOffer {\n  type: 'minus';\n  value: number;\n}\n\nexport interface SliceOffer {\n  type: 'slice';\n  value: number;\n  sliceValue: number;\n}\n",
+            "properties": [
+                {
+                    "name": "offers",
+                    "type": "Offer[]",
+                    "optional": false,
+                    "description": "",
+                    "line": 10
+                }
+            ],
+            "indexSignatures": [],
+            "kind": 150,
+            "methods": []
+        },
+        {
+            "name": "MinusOffer",
+            "id": "interface-MinusOffer-d1ff7ccaf7a1089957eca8e3c0ed88c7",
+            "file": "src/app/api/books.ts",
+            "type": "interface",
+            "sourceCode": "export interface Book {\n  isbn: string;\n  title: string;\n  price: number;\n  cover: string;\n  synopsis: string[];\n}\n\nexport interface CommercialOffers {\n  offers: Offer[];\n}\n\nexport type Offer = PercentageOffer | MinusOffer | SliceOffer;\n\nexport interface PercentageOffer {\n  type: 'percentage';\n  value: number;\n}\n\nexport interface MinusOffer {\n  type: 'minus';\n  value: number;\n}\n\nexport interface SliceOffer {\n  type: 'slice';\n  value: number;\n  sliceValue: number;\n}\n",
+            "properties": [
+                {
+                    "name": "type",
+                    "type": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 21
+                },
+                {
+                    "name": "value",
+                    "type": "number",
+                    "optional": false,
+                    "description": "",
+                    "line": 22
+                }
+            ],
+            "indexSignatures": [],
+            "kind": 150,
+            "methods": []
+        },
+        {
+            "name": "PercentageOffer",
+            "id": "interface-PercentageOffer-d1ff7ccaf7a1089957eca8e3c0ed88c7",
+            "file": "src/app/api/books.ts",
+            "type": "interface",
+            "sourceCode": "export interface Book {\n  isbn: string;\n  title: string;\n  price: number;\n  cover: string;\n  synopsis: string[];\n}\n\nexport interface CommercialOffers {\n  offers: Offer[];\n}\n\nexport type Offer = PercentageOffer | MinusOffer | SliceOffer;\n\nexport interface PercentageOffer {\n  type: 'percentage';\n  value: number;\n}\n\nexport interface MinusOffer {\n  type: 'minus';\n  value: number;\n}\n\nexport interface SliceOffer {\n  type: 'slice';\n  value: number;\n  sliceValue: number;\n}\n",
+            "properties": [
+                {
+                    "name": "type",
+                    "type": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 16
+                },
+                {
+                    "name": "value",
+                    "type": "number",
+                    "optional": false,
+                    "description": "",
+                    "line": 17
+                }
+            ],
+            "indexSignatures": [],
+            "kind": 150,
+            "methods": []
+        },
+        {
             "name": "ShoppingCartItem",
             "id": "interface-ShoppingCartItem-bbc3f1278c6ff612c6b41ad4ecc18085",
             "file": "src/app/shopping-cart/store/shopping-cart.ts",
@@ -95,10 +239,10 @@
         },
         {
             "name": "ShoppingCartState",
-            "id": "interface-ShoppingCartState-7ac62c69ae689df0a13d444d8669fde2",
+            "id": "interface-ShoppingCartState-4b52e25cfad9d39b05091f3d26db6a1f",
             "file": "src/app/shopping-cart/store/shopping-cart.reducer.ts",
             "type": "interface",
-            "sourceCode": "import { Action, createReducer, on } from '@ngrx/store';\n\nimport * as BooksSearchPageActions from '../../books/store/books-search.actions';\nimport { ShoppingCartItem } from './shopping-cart';\n\nexport interface ShoppingCartState {\n  items: ShoppingCartItem[]\n}\n\nexport const initialState: ShoppingCartState = {\n  items: []\n}\n\nexport const shoppingCartReducer = createReducer(\n  initialState,\n  on(BooksSearchPageActions.addToCart, (state, book) => {\n    const index = state.items.findIndex(item => item.book.isbn === book.isbn);\n\n    if (index >= 0) {\n      return {\n        ...state,\n        items: [\n          ...state.items.slice(0, index),\n          {\n            book,\n            quantity: state.items[index].quantity + 1\n          },\n          ...state.items.slice(index + 1)\n        ]\n      };\n    } else {\n      return {\n        ...state,\n        items: [\n          ...state.items,\n          {\n            book,\n            quantity: 1\n          }\n        ]\n      };\n    }\n})\n);\n\nexport function reducer(state: ShoppingCartState | undefined, action: Action) {\n  return shoppingCartReducer(state, action);\n}\n",
+            "sourceCode": "import { Action, createReducer, on } from '@ngrx/store';\n\nimport * as BooksSearchPageActions from '../../books/store/books-search.actions';\nimport { ShoppingCartItem } from './shopping-cart';\n\nexport interface ShoppingCartState {\n  items: ShoppingCartItem[]\n}\n\nexport const initialState: ShoppingCartState = {\n  items: []\n}\n\nexport const shoppingCartReducer = createReducer(\n  initialState,\n  on(BooksSearchPageActions.addToCart, (state, book) => {\n    const index = state.items.findIndex(item => item.book.isbn === book.isbn);\n\n    if (index >= 0) {\n      return {\n        ...state,\n        items: [\n          ...state.items.slice(0, index),\n          {\n            book,\n            quantity: state.items[index].quantity + 1\n          },\n          ...state.items.slice(index + 1)\n        ]\n      };\n    } else {\n      return {\n        ...state,\n        items: [\n          ...state.items,\n          {\n            book,\n            quantity: 1\n          }\n        ]\n      };\n    }\n  }),\n  on(BooksSearchPageActions.removeFromCart, (state, book) => {\n    const index = state.items.findIndex(item => item.book.isbn === book.isbn);\n\n    if (index >= 0) {\n      if (state.items[index].quantity - 1 === 0) {\n        return {\n          ...state,\n          items: [\n            ...state.items.slice(0, index),\n            ...state.items.slice(index + 1)\n          ]\n        };\n      } else {\n        return {\n          ...state,\n          items: [\n            ...state.items.slice(0, index),\n            {\n              book,\n              quantity: state.items[index].quantity - 1\n            },\n            ...state.items.slice(index + 1)\n          ]\n        };\n      }\n    } else {\n      return state;\n    }\n  })\n);\n\nexport function reducer(state: ShoppingCartState | undefined, action: Action) {\n  return shoppingCartReducer(state, action);\n}\n",
             "properties": [
                 {
                     "name": "items",
@@ -111,12 +255,45 @@
             "indexSignatures": [],
             "kind": 150,
             "methods": []
+        },
+        {
+            "name": "SliceOffer",
+            "id": "interface-SliceOffer-d1ff7ccaf7a1089957eca8e3c0ed88c7",
+            "file": "src/app/api/books.ts",
+            "type": "interface",
+            "sourceCode": "export interface Book {\n  isbn: string;\n  title: string;\n  price: number;\n  cover: string;\n  synopsis: string[];\n}\n\nexport interface CommercialOffers {\n  offers: Offer[];\n}\n\nexport type Offer = PercentageOffer | MinusOffer | SliceOffer;\n\nexport interface PercentageOffer {\n  type: 'percentage';\n  value: number;\n}\n\nexport interface MinusOffer {\n  type: 'minus';\n  value: number;\n}\n\nexport interface SliceOffer {\n  type: 'slice';\n  value: number;\n  sliceValue: number;\n}\n",
+            "properties": [
+                {
+                    "name": "sliceValue",
+                    "type": "number",
+                    "optional": false,
+                    "description": "",
+                    "line": 28
+                },
+                {
+                    "name": "type",
+                    "type": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 26
+                },
+                {
+                    "name": "value",
+                    "type": "number",
+                    "optional": false,
+                    "description": "",
+                    "line": 27
+                }
+            ],
+            "indexSignatures": [],
+            "kind": 150,
+            "methods": []
         }
     ],
     "injectables": [
         {
             "name": "BooksService",
-            "id": "injectable-BooksService-2f990d66419bcb65889c64bc11953c90",
+            "id": "injectable-BooksService-64bc6d88dddfb86d537ed20ff188c035",
             "file": "src/app/api/books.service.ts",
             "properties": [
                 {
@@ -138,29 +315,7 @@
                     "line": 16
                 },
                 {
-                    "name": "getBook",
-                    "args": [
-                        {
-                            "name": "isbn",
-                            "type": "string"
-                        }
-                    ],
-                    "optional": false,
-                    "returnType": "Observable<Book>",
-                    "typeParameters": [],
-                    "line": 20,
-                    "jsdoctags": [
-                        {
-                            "name": "isbn",
-                            "type": "string",
-                            "tagName": {
-                                "text": "param"
-                            }
-                        }
-                    ]
-                },
-                {
-                    "name": "getOffers",
+                    "name": "getCommercialOffers",
                     "args": [
                         {
                             "name": "isbn",
@@ -168,9 +323,9 @@
                         }
                     ],
                     "optional": false,
-                    "returnType": "Observable<any>",
+                    "returnType": "Observable<CommercialOffers>",
                     "typeParameters": [],
-                    "line": 24,
+                    "line": 20,
                     "jsdoctags": [
                         {
                             "name": "isbn",
@@ -183,7 +338,7 @@
                 }
             ],
             "description": "",
-            "sourceCode": "import { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\nimport { Observable } from 'rxjs';\n\nimport { Book } from './books';\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class BooksService {\n\n  baseUrl = 'https://henri-potier.techx.fr';\n\n  constructor(private _http: HttpClient) { }\n\n  getAllBooks(): Observable<Book[]> {\n    return this._http.get<Book[]>(`${this.baseUrl}/books`);\n  }\n\n  getBook(isbn: string): Observable<Book> {\n    return this._http.get<Book>(`${this.baseUrl}/books/${isbn}`);\n  }\n\n  getOffers(isbn: string[]): Observable<any> {\n    return this._http.get(`${this.baseUrl}/books/${isbn.join(',')}`);\n  }\n}\n",
+            "sourceCode": "import { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\nimport { Observable } from 'rxjs';\n\nimport { Book, CommercialOffers, Offer } from './books';\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class BooksService {\n\n  baseUrl = 'https://henri-potier.techx.fr';\n\n  constructor(private _http: HttpClient) { }\n\n  getAllBooks(): Observable<Book[]> {\n    return this._http.get<Book[]>(`${this.baseUrl}/books`);\n  }\n\n  getCommercialOffers(isbn: string[]): Observable<CommercialOffers> {\n    return this._http.get<CommercialOffers>(`${this.baseUrl}/books/${isbn.join(',')}/commercialOffers`);\n  }\n}\n",
             "constructorObj": {
                 "name": "constructor",
                 "description": "",
@@ -203,6 +358,89 @@
                         }
                     }
                 ]
+            },
+            "type": "injectable"
+        },
+        {
+            "name": "ShoppingCartService",
+            "id": "injectable-ShoppingCartService-31eea59e66f995c9ce265c44819467b6",
+            "file": "src/app/shopping-cart/services/shopping-cart.service.ts",
+            "properties": [],
+            "methods": [
+                {
+                    "name": "getBestOffer",
+                    "args": [
+                        {
+                            "name": "total",
+                            "type": "number"
+                        },
+                        {
+                            "name": "offers",
+                            "type": "Offer[]"
+                        }
+                    ],
+                    "optional": false,
+                    "returnType": "BestOffer",
+                    "typeParameters": [],
+                    "line": 17,
+                    "jsdoctags": [
+                        {
+                            "name": "total",
+                            "type": "number",
+                            "tagName": {
+                                "text": "param"
+                            }
+                        },
+                        {
+                            "name": "offers",
+                            "type": "Offer[]",
+                            "tagName": {
+                                "text": "param"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "getDiscount",
+                    "args": [
+                        {
+                            "name": "total",
+                            "type": "number"
+                        },
+                        {
+                            "name": "offer",
+                            "type": "Offer"
+                        }
+                    ],
+                    "optional": false,
+                    "returnType": "number",
+                    "typeParameters": [],
+                    "line": 33,
+                    "jsdoctags": [
+                        {
+                            "name": "total",
+                            "type": "number",
+                            "tagName": {
+                                "text": "param"
+                            }
+                        },
+                        {
+                            "name": "offer",
+                            "type": "Offer",
+                            "tagName": {
+                                "text": "param"
+                            }
+                        }
+                    ]
+                }
+            ],
+            "description": "",
+            "sourceCode": "import { Injectable } from '@angular/core';\n\nimport { Offer } from '../../api/books';\n\nexport interface BestOffer {\n  offer: Offer;\n  discount: number;\n}\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class ShoppingCartService {\n\n  constructor() { }\n\n  getBestOffer(total: number, offers: Offer[]): BestOffer {\n    const discounts = offers.map(offer => this.getDiscount(total, offer));\n    let minimalPriceIndex = 0;\n\n    for (let i = 0; i < discounts.length; i++) {\n      if (discounts[i] > discounts[minimalPriceIndex]) {\n        minimalPriceIndex = i;\n      }\n    }\n\n    return {\n      offer: offers[minimalPriceIndex],\n      discount: discounts[minimalPriceIndex]\n    };\n  }\n\n  getDiscount(total: number, offer: Offer): number {\n    switch (offer.type) {\n      case 'minus':\n        return offer.value;\n      case 'percentage':\n        return total * (offer.value / 100);\n      case 'slice':\n          return Math.floor(total / offer.sliceValue) * offer.value;\n      default:\n        throw new Error('Unrecognized offer type');\n    }\n  }\n\n  // applyOffer(total: number, offer: Offer): number {\n  //   switch (offer.type) {\n  //     case 'minus':\n  //       return total - offer.value;\n  //     case 'percentage':\n  //       return total - (total * (offer.value / 100));\n  //     case 'slice':\n  //         return total - (Math.floor(total / offer.sliceValue) * offer.value);\n  //     default:\n  //       return total;\n  //   }\n  // }\n}\n",
+            "constructorObj": {
+                "name": "constructor",
+                "description": "",
+                "args": [],
+                "line": 13
             },
             "type": "injectable"
         }
@@ -250,99 +488,49 @@
             "templateData": "<app-header></app-header>\n\n<main class=\"container\">\n  <router-outlet></router-outlet>\n</main>\n"
         },
         {
-            "name": "BookListComponent",
-            "id": "component-BookListComponent-83a9e62875650a9656220b54dfd237d9",
-            "file": "src/app/books/components/book-list/book-list.component.ts",
+            "name": "BookCardComponent",
+            "id": "component-BookCardComponent-c4aabb4190084e00cbb746379215f677",
+            "file": "src/app/books/components/book-card/book-card.component.ts",
             "changeDetection": "ChangeDetectionStrategy.OnPush",
             "encapsulation": [],
             "entryComponents": [],
             "inputs": [],
             "outputs": [],
             "providers": [],
-            "selector": "app-book-list",
+            "selector": "app-book-card",
             "styleUrls": [
-                "./book-list.component.scss"
+                "./book-card.component.scss"
             ],
             "styles": [],
             "templateUrl": [
-                "./book-list.component.html"
-            ],
-            "viewProviders": [],
-            "inputsClass": [
-                {
-                    "name": "books",
-                    "defaultValue": "[]",
-                    "line": 19,
-                    "type": "Book[]"
-                }
-            ],
-            "outputsClass": [
-                {
-                    "name": "addToCart",
-                    "defaultValue": "new EventEmitter()",
-                    "line": 22,
-                    "type": "EventEmitter<Book>"
-                }
-            ],
-            "propertiesClass": [
-                {
-                    "name": "console",
-                    "defaultValue": "console",
-                    "type": "",
-                    "optional": false,
-                    "description": "",
-                    "line": 24
-                }
-            ],
-            "methodsClass": [],
-            "hostBindings": [],
-            "hostListeners": [],
-            "description": "",
-            "rawdescription": "",
-            "type": "component",
-            "sourceCode": "import {\n  ChangeDetectionStrategy,\n  Component,\n  EventEmitter,\n  Input,\n  Output\n} from '@angular/core';\nimport { Book } from '../../../api/books';\n\n@Component({\n  selector: 'app-book-list',\n  templateUrl: './book-list.component.html',\n  styleUrls: ['./book-list.component.scss'],\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class BookListComponent {\n\n  @Input()\n  books: Book[] = [];\n\n  @Output()\n  addToCart: EventEmitter<Book> = new EventEmitter();\n\n  console = console;\n\n}\n",
-            "assetsDirs": [],
-            "styleUrlsData": [
-                {
-                    "data": ".book-list__list-item {\n  display: block;\n}\n",
-                    "styleUrl": "./book-list.component.scss"
-                }
-            ],
-            "stylesData": "",
-            "templateData": "<app-book-list-item *ngFor=\"let book of books\"\n                    class=\"book-list__list-item margin--horizontal--lg\"\n                    [book]=\"book\"\n                    (addToCart)=\"addToCart.emit(book)\">\n</app-book-list-item>\n"
-        },
-        {
-            "name": "BookListItemComponent",
-            "id": "component-BookListItemComponent-777c6bbece1c0a7713644d32e01dd421",
-            "file": "src/app/books/components/book-list/book-list-item/book-list-item.component.ts",
-            "changeDetection": "ChangeDetectionStrategy.OnPush",
-            "encapsulation": [],
-            "entryComponents": [],
-            "inputs": [],
-            "outputs": [],
-            "providers": [],
-            "selector": "app-book-list-item",
-            "styleUrls": [
-                "./book-list-item.component.scss"
-            ],
-            "styles": [],
-            "templateUrl": [
-                "./book-list-item.component.html"
+                "./book-card.component.html"
             ],
             "viewProviders": [],
             "inputsClass": [
                 {
                     "name": "book",
-                    "line": 13,
+                    "line": 20,
                     "type": "Book"
+                },
+                {
+                    "name": "quantity",
+                    "defaultValue": "0",
+                    "line": 23,
+                    "type": "number | null"
                 }
             ],
             "outputsClass": [
                 {
                     "name": "addToCart",
                     "defaultValue": "new EventEmitter()",
-                    "line": 16,
-                    "type": "EventEmitter<Book>"
+                    "line": 26,
+                    "type": "EventEmitter<void>"
+                },
+                {
+                    "name": "removeFromCart",
+                    "defaultValue": "new EventEmitter()",
+                    "line": 29,
+                    "type": "EventEmitter<void>"
                 }
             ],
             "propertiesClass": [],
@@ -352,20 +540,79 @@
             "description": "",
             "rawdescription": "",
             "type": "component",
-            "sourceCode": "import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';\nimport { Book } from '../../../../api/books';\n\n@Component({\n  selector: 'app-book-list-item',\n  templateUrl: './book-list-item.component.html',\n  styleUrls: ['./book-list-item.component.scss'],\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class BookListItemComponent {\n\n  @Input()\n  book?: Book;\n\n  @Output()\n  addToCart: EventEmitter<Book> = new EventEmitter();\n\n}\n",
+            "sourceCode": "import {\n  ChangeDetectionStrategy,\n  Component,\n  EventEmitter,\n  Input,\n  Output\n} from '@angular/core';\n\nimport { Book } from '../../../api/books';\n\n@Component({\n  selector: 'app-book-card',\n  templateUrl: './book-card.component.html',\n  styleUrls: ['./book-card.component.scss'],\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class BookCardComponent {\n\n  @Input()\n  book?: Book;\n\n  @Input()\n  quantity: number | null = 0;\n\n  @Output()\n  addToCart: EventEmitter<void> = new EventEmitter();\n\n  @Output()\n  removeFromCart: EventEmitter<void> = new EventEmitter();\n\n}\n",
             "assetsDirs": [],
             "styleUrlsData": [
                 {
                     "data": ".book-item {\n//   display: flex;\n//   gap: 15px;\n\n  min-height: 200px;\n\n//   border: 1px solid;\n\n//   &__cover {\n//     flex: 100px 0 0;\n//   }\n\n//   &__info {\n//     flex-grow: 1;\n//   }\n\n//   &__action {\n//     flex: 100px 0 0;\n//   }\n}\n\n// .book-cover__image {\n//   width: 100%;\n//   height: auto;\n// }\n\n.book-info {\n//   display: flex;\n//   flex-flow: column;\n\n//   &__title {\n//     margin: 0;\n//   }\n\n  &__summary {\n//     height: 100%;\n//     overflow: auto;\n    text-align: justify;\n  }\n}\n\n\n",
-                    "styleUrl": "./book-list-item.component.scss"
+                    "styleUrl": "./book-card.component.scss"
                 }
             ],
             "stylesData": "",
-            "templateData": "<article class=\"book-item card my-4\">\n  <div class=\"row g-0\">\n\n    <div class=\"book-item__cover book-cover padding--md col-md-2 text-center\">\n      <img [src]=\"book?.cover\" class=\"book-cover__image img-fluid p-2\" />\n    </div>\n\n    <div class=\"book-item__info book-info card-body col-md-8\">\n      <h5 class=\"book-info__title card-title\">{{ book?.title }}</h5>\n      <div class=\"book-info__summary overflow-auto\">\n        <p *ngFor=\"let synopsisParagraph of book?.synopsis\" class=\"card-text\">\n          {{ synopsisParagraph }}\n        </p>\n      </div>\n    </div>\n\n    <div class=\"book-item__action book-action padding--md col-md-2 border-start p-3\">\n      <div class=\"book-action__price mb-4 fs-5\">\n        prix: <strong>{{ book?.price | currency: 'EUR' }}</strong>\n      </div>\n      <div class=\"book-action__add d-grid\">\n        <button class=\"btn btn-primary\" (click)=\"addToCart.emit(book)\">Ajouter au Panier</button>\n      </div>\n    </div>\n\n  </div>\n</article>\n"
+            "templateData": "<article class=\"book-item card my-4\">\n  <div class=\"row g-0\">\n\n    <div class=\"book-item__cover book-cover col-md-2 text-center\">\n      <img [src]=\"book?.cover\" class=\"book-cover__image img-fluid p-2\" />\n    </div>\n\n    <div class=\"book-item__info book-info card-body col-md-8\">\n      <h5 class=\"book-info__title card-title\">{{ book?.title }}</h5>\n      <div class=\"book-info__summary overflow-auto\">\n        <p *ngFor=\"let synopsisParagraph of book?.synopsis\" class=\"card-text\">\n          {{ synopsisParagraph }}\n        </p>\n      </div>\n    </div>\n\n    <div class=\"book-item__action book-action col-md-2 border-start p-3\">\n      <div class=\"book-action__price mb-4 fs-5\">\n        prix: <strong>{{ book?.price | currency: 'EUR' }}</strong>\n      </div>\n\n      <div class=\"book-action__add\">\n        <app-book-quantity [quantity]=\"quantity\"\n                           (addToCart)=\"addToCart.emit()\"\n                           (removeFromCart)=\"removeFromCart.emit()\">\n        </app-book-quantity>\n      </div>\n    </div>\n\n  </div>\n</article>\n"
+        },
+        {
+            "name": "BookQuantityComponent",
+            "id": "component-BookQuantityComponent-c7e3dccf0cd090a6e5bb97efe55e78b1",
+            "file": "src/app/books/components/book-card/book-quantity/book-quantity.component.ts",
+            "changeDetection": "ChangeDetectionStrategy.OnPush",
+            "encapsulation": [],
+            "entryComponents": [],
+            "inputs": [],
+            "outputs": [],
+            "providers": [],
+            "selector": "app-book-quantity",
+            "styleUrls": [
+                "./book-quantity.component.scss"
+            ],
+            "styles": [],
+            "templateUrl": [
+                "./book-quantity.component.html"
+            ],
+            "viewProviders": [],
+            "inputsClass": [
+                {
+                    "name": "quantity",
+                    "defaultValue": "0",
+                    "line": 20,
+                    "type": "number | null"
+                }
+            ],
+            "outputsClass": [
+                {
+                    "name": "addToCart",
+                    "defaultValue": "new EventEmitter()",
+                    "line": 23,
+                    "type": "EventEmitter<void>"
+                },
+                {
+                    "name": "removeFromCart",
+                    "defaultValue": "new EventEmitter()",
+                    "line": 26,
+                    "type": "EventEmitter<void>"
+                }
+            ],
+            "propertiesClass": [],
+            "methodsClass": [],
+            "hostBindings": [],
+            "hostListeners": [],
+            "description": "",
+            "rawdescription": "",
+            "type": "component",
+            "sourceCode": "import {\n  ChangeDetectionStrategy,\n  Component,\n  EventEmitter,\n  Input,\n  Output\n} from '@angular/core';\n\nimport { Book } from '../../../../api/books';\n\n@Component({\n  selector: 'app-book-quantity',\n  templateUrl: './book-quantity.component.html',\n  styleUrls: ['./book-quantity.component.scss'],\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class BookQuantityComponent {\n\n  @Input()\n  quantity: number | null = 0;\n\n  @Output()\n  addToCart: EventEmitter<void> = new EventEmitter();\n\n  @Output()\n  removeFromCart: EventEmitter<void> = new EventEmitter();\n\n}\n",
+            "assetsDirs": [],
+            "styleUrlsData": [
+                {
+                    "data": "",
+                    "styleUrl": "./book-quantity.component.scss"
+                }
+            ],
+            "stylesData": "",
+            "templateData": "<div class=\"d-grid\">\n  <ng-container *ngIf=\"quantity; else noQuantityTemplate\">\n    <div class=\"row g-0 bg-light border\">\n      <button class=\"btn btn-primary col-3\" (click)=\"removeFromCart.emit()\">-</button>\n      <div class=\"col text-center\">{{ quantity }}</div>\n      <button class=\"btn btn-primary col-3\" (click)=\"addToCart.emit()\">+</button>\n    </div>\n  </ng-container>\n  <ng-template #noQuantityTemplate>\n    <button class=\"btn btn-primary\" (click)=\"addToCart.emit()\">Ajouter au Panier</button>\n  </ng-template>\n</div>\n"
         },
         {
             "name": "BooksSearchComponent",
-            "id": "component-BooksSearchComponent-1161c8eed40a9fd6b1de0e21760e11df",
+            "id": "component-BooksSearchComponent-cc19994eaff2f4ea0256c7a4291a4fcf",
             "file": "src/app/books/containers/books-search/books-search.component.ts",
             "changeDetection": "ChangeDetectionStrategy.OnPush",
             "encapsulation": [],
@@ -390,10 +637,40 @@
                     "type": "Observable<Book[]>",
                     "optional": false,
                     "description": "",
-                    "line": 18
+                    "line": 19
+                },
+                {
+                    "name": "_searchText",
+                    "defaultValue": "''",
+                    "type": "string",
+                    "optional": false,
+                    "description": "",
+                    "line": 20
                 }
             ],
             "methodsClass": [
+                {
+                    "name": "getShoppingCartItemQuantity",
+                    "args": [
+                        {
+                            "name": "isbn",
+                            "type": "string"
+                        }
+                    ],
+                    "optional": false,
+                    "returnType": "Observable<number>",
+                    "typeParameters": [],
+                    "line": 37,
+                    "jsdoctags": [
+                        {
+                            "name": "isbn",
+                            "type": "string",
+                            "tagName": {
+                                "text": "param"
+                            }
+                        }
+                    ]
+                },
                 {
                     "name": "onAddToCart",
                     "args": [
@@ -405,7 +682,29 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 27,
+                    "line": 29,
+                    "jsdoctags": [
+                        {
+                            "name": "book",
+                            "type": "Book",
+                            "tagName": {
+                                "text": "param"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "onRemoveFromCart",
+                    "args": [
+                        {
+                            "name": "book",
+                            "type": "Book"
+                        }
+                    ],
+                    "optional": false,
+                    "returnType": "void",
+                    "typeParameters": [],
+                    "line": 33,
                     "jsdoctags": [
                         {
                             "name": "book",
@@ -422,7 +721,7 @@
             "description": "",
             "rawdescription": "",
             "type": "component",
-            "sourceCode": "import { ChangeDetectionStrategy, Component } from '@angular/core';\nimport { Store } from '@ngrx/store';\nimport { Observable } from 'rxjs';\n\nimport { Book } from '../../../api/books';\nimport { BooksService } from '../../../api/books.service';\nimport * as FromRoot from '../../../app.state';\nimport { addToCart } from '../../store/books-search.actions';\n\n@Component({\n  selector: 'app-books-search',\n  templateUrl: './books-search.component.html',\n  styleUrls: ['./books-search.component.scss'],\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class BooksSearchComponent {\n\n  _books$: Observable<Book[]>;\n\n  constructor(\n    private _store: Store<FromRoot.AppState>,\n    private _booksService: BooksService,\n  ) {\n    this._books$ = this._booksService.getAllBooks();\n  }\n\n  onAddToCart(book: Book): void {\n    this._store.dispatch(addToCart(book));\n  }\n\n}\n",
+            "sourceCode": "import { ChangeDetectionStrategy, Component } from '@angular/core';\nimport { Store } from '@ngrx/store';\nimport { Observable } from 'rxjs';\n\nimport { Book } from '../../../api/books';\nimport { BooksService } from '../../../api/books.service';\nimport * as FromRoot from '../../../app.state';\nimport { addToCart, removeFromCart } from '../../store/books-search.actions';\nimport { ShoppingCartItem } from '../../../shopping-cart/store/shopping-cart';\n\n@Component({\n  selector: 'app-books-search',\n  templateUrl: './books-search.component.html',\n  styleUrls: ['./books-search.component.scss'],\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class BooksSearchComponent {\n\n  _books$: Observable<Book[]>;\n  _searchText: string = '';\n\n  constructor(\n    private _store: Store<FromRoot.AppState>,\n    private _booksService: BooksService,\n  ) {\n    this._books$ = this._booksService.getAllBooks();\n  }\n\n  onAddToCart(book: Book): void {\n    this._store.dispatch(addToCart(book));\n  }\n\n  onRemoveFromCart(book: Book): void {\n    this._store.dispatch(removeFromCart(book));\n  }\n\n  getShoppingCartItemQuantity(isbn: string): Observable<number> {\n    return this._store.select(FromRoot.getShoppingCartItemQuantity(isbn));\n  }\n\n}\n",
             "assetsDirs": [],
             "styleUrlsData": [
                 {
@@ -444,7 +743,7 @@
                         "type": "BooksService"
                     }
                 ],
-                "line": 18,
+                "line": 20,
                 "jsdoctags": [
                     {
                         "name": "_store",
@@ -462,7 +761,7 @@
                     }
                 ]
             },
-            "templateData": "<div class=\"input-group my-4 bg-white\">\n  <input class=\"form-control\" type=\"search\" placeholder=\"Rechercher un livre...\" />\n  <button class=\"btn btn-outline-secondary\" type=\"button\">Recherche</button>\n</div>\n\n<ng-container *ngIf=\"_books$ | async as books; else loadingTemplate\">\n  <app-book-list [books]=\"books\"\n                 (addToCart)=\"onAddToCart($event)\">\n  </app-book-list>\n</ng-container>\n\n<ng-template #loadingTemplate>\n  <div class=\"text-center\">\n    <div class=\"spinner-border\" role=\"status\">\n      <span class=\"visually-hidden\">Loading...</span>\n    </div>\n  </div>\n</ng-template>\n"
+            "templateData": "<div class=\"my-4\">\n  <input class=\"form-control\" type=\"search\" placeholder=\"Rechercher un livre...\" [(ngModel)]=\"_searchText\" />\n</div>\n\n<ng-container *ngIf=\"_books$ | async as books; else loadingTemplate\">\n  <app-book-card *ngFor=\"let book of books | searchBooks: _searchText\"\n                 [book]=\"book\"\n                 [quantity]=\"getShoppingCartItemQuantity(book.isbn) | async\"\n                 (addToCart)=\"onAddToCart(book)\"\n                 (removeFromCart)=\"onRemoveFromCart(book)\">\n  </app-book-card>\n</ng-container>\n\n<ng-template #loadingTemplate>\n  <div class=\"text-center\">\n    <div class=\"spinner-border\" role=\"status\">\n      <span class=\"visually-hidden\">Loading...</span>\n    </div>\n  </div>\n</ng-template>\n"
         },
         {
             "name": "HeaderComponent",
@@ -529,11 +828,11 @@
                     }
                 ]
             },
-            "templateData": "<header class=\"page-header navbar navbar-light bg-white sticky-top border-bottom\">\n  <div class=\"container-fluid\">\n    <!-- <h1 class=\"page-header__title\"> -->\n      <a class=\"navbar-brand\" routerLink=\"/\">Henri Potier Store</a>\n    <!-- </h1> -->\n\n    <!-- <div class=\"spacer\"></div> -->\n\n    <a class=\"page-header__action btn btn-outline-primary\" routerLink=\"/shopping-cart\"><span *ngIf=\"_itemsCount$ | async as itemsCount\" class=\"badge rounded-pill bg-primary\">{{ itemsCount }}</span> Panier</a>\n  </div>\n</header>\n"
+            "templateData": "<header class=\"navbar navbar-light bg-white sticky-top border-bottom\">\n  <div class=\"container-fluid\">\n    <a class=\"navbar-brand\" routerLink=\"/\">Henri Potier Store</a>\n\n    <a class=\"btn btn-outline-primary\" routerLink=\"/shopping-cart\"><span *ngIf=\"_itemsCount$ | async as itemsCount\" class=\"badge rounded-pill bg-primary\">{{ itemsCount }}</span> Panier</a>\n  </div>\n</header>\n"
         },
         {
             "name": "ShoppingCartComponent",
-            "id": "component-ShoppingCartComponent-f551112bb9f99a935cba5991addb7b42",
+            "id": "component-ShoppingCartComponent-829f64e219ee8d4d37069299e3f06944",
             "file": "src/app/shopping-cart/containers/shopping-cart-summary/shopping-cart.component.ts",
             "changeDetection": "ChangeDetectionStrategy.OnPush",
             "encapsulation": [],
@@ -554,29 +853,34 @@
             "outputsClass": [],
             "propertiesClass": [
                 {
+                    "name": "_bestOffer$",
+                    "type": "Observable<BestOffer>",
+                    "optional": false,
+                    "description": "",
+                    "line": 22
+                },
+                {
                     "name": "_shoppingCartItems$",
                     "type": "Observable<ShoppingCartItem[]>",
                     "optional": false,
                     "description": "",
-                    "line": 51
-                }
-            ],
-            "methodsClass": [
+                    "line": 20
+                },
                 {
-                    "name": "bestOffer",
-                    "args": [],
+                    "name": "_totalPrice$",
+                    "type": "Observable<number>",
                     "optional": false,
-                    "returnType": "void",
-                    "typeParameters": [],
-                    "line": 57
+                    "description": "",
+                    "line": 21
                 }
             ],
+            "methodsClass": [],
             "hostBindings": [],
             "hostListeners": [],
-            "description": "<p>[\n{\n  &quot;book&quot;: {\n    &quot;isbn&quot;: &quot;c8fabf68-8374-48fe-a7ea-a00ccd07afff&quot;,\n    &quot;title&quot;: &quot;Henri Potier à l&#39;école des sorciers&quot;,\n    &quot;price&quot;: 35,\n    &quot;cover&quot;: &quot;<a href=\"https://firebasestorage.googleapis.com/v0/b/henri-potier.appspot.com/o/hp0.jpg?alt=media&quot;\">https://firebasestorage.googleapis.com/v0/b/henri-potier.appspot.com/o/hp0.jpg?alt=media&quot;</a>,\n    &quot;synopsis&quot;: [\n      &quot;Après la mort de ses parents (Lily et James Potier), Henri est recueilli par sa tante Pétunia (la sœur de Lily) et son oncle Vernon à l&#39;âge d&#39;un an. Ces derniers, animés depuis toujours d&#39;une haine féroce envers les parents du garçon qu&#39;ils qualifient de gens « bizarres », voire de « monstres », traitent froidement leur neveu et demeurent indifférents aux humiliations que leur fils Dudley lui fait subir. Henri ignore tout de l&#39;histoire de ses parents, si ce n&#39;est qu&#39;ils ont été tués dans un accident de voiture&quot;,\n      &quot;Le jour des 11 ans de Henri, un demi-géant du nom de Rubeus Hagrid vient le chercher pour l’emmener à Poudlard, une école de sorcellerie, où il est inscrit depuis sa naissance et attendu pour la prochaine rentrée. Hagrid lui révèle alors qu’il a toujours été un sorcier, tout comme l&#39;étaient ses parents, tués en réalité par le plus puissant mage noir du monde de la sorcellerie, Voldemort (surnommé « Celui-Dont-On-Ne-Doit-Pas-Prononcer-Le-Nom »), après qu&#39;ils ont refusé de se joindre à lui. Ce serait Henri lui-même, alors qu&#39;il n&#39;était encore qu&#39;un bébé, qui aurait fait ricocher le sortilège que Voldemort lui destinait, neutralisant ses pouvoirs et le réduisant à l&#39;état de créature quasi-insignifiante. Le fait d&#39;avoir vécu son enfance chez son oncle et sa tante dépourvus de pouvoirs magiques lui a donc permis de grandir à l&#39;abri de la notoriété qu&#39;il a dans le monde des sorciers.&quot;,\n      &quot;Henri entre donc à l’école de Poudlard, dirigée par le professeur Albus Dumbledore. Il est envoyé dans la maison Gryffondor par le « choixpeau ». Il y fait la connaissance de Ron Weasley et Hermione Granger, qui deviendront ses complices. Par ailleurs, Henri intègre rapidement l&#39;équipe de Quidditch de sa maison, un sport collectif très populaire chez les sorciers se pratiquant sur des balais volants. Henri connaît probablement la plus heureuse année de sa vie, mais également la plus périlleuse, car Voldemort n&#39;a pas totalement disparu et semble bien décidé à reprendre forme humaine.&quot;\n    ],\n    &quot;type&quot;: &quot;[Books Search Page] Add to Cart&quot;\n  },\n  &quot;quantity&quot;: 2\n},\n{\n  &quot;book&quot;: {\n    &quot;isbn&quot;: &quot;fcd1e6fa-a63f-4f75-9da4-b560020b6acc&quot;,\n    &quot;title&quot;: &quot;Henri Potier et le Prisonnier d&#39;Azkaban&quot;,\n    &quot;price&quot;: 30,\n    &quot;cover&quot;: &quot;<a href=\"https://firebasestorage.googleapis.com/v0/b/henri-potier.appspot.com/o/hp2.jpg?alt=media&quot;\">https://firebasestorage.googleapis.com/v0/b/henri-potier.appspot.com/o/hp2.jpg?alt=media&quot;</a>,\n    &quot;synopsis&quot;: [\n      &quot;Durant l&#39;été, pour son treizième anniversaire, Henri reçoit plusieurs cartes de ses amis, notamment une lettre de Ron qui lui écrit d&#39;Égypte, où il passe ses vacances avec sa famille. Une lettre du professeur McGonagall, directrice adjointe de Poudlard, lui informe que les élèves de troisième année auront la possibilité de visiter le village de Pré-au-Lard.&quot;,\n      &quot;Le lendemain, les informations télévisées moldues annoncent l&#39;évasion d&#39;un très dangereux prisonnier du nom de Sirius Black et l&#39;oncle et la tante de Henri s&#39;inquiètent légèrement pour eux-mêmes. Plus tard, ils annoncent à Henri que la tante Marge séjournera une semaine chez eux, à Privet Drive. La tante Marge provoque Henri en traitant son père défunt d&#39;ancien ivrogne. Henri s&#39;énerve, perd le contrôle de sa magie et fait accidentellement gonfler la tante Marge comme un ballon. Alors que son oncle, furieux, ordonne à Henri de rendre à Marge son apparence normale, le garçon refuse et prend la fuite en pleine nuit, emportant sa valise et sa chouette Edwige.&quot;,\n      &quot;Plus tard, sur le Chemin de traverse, Henri apprend avec surprise que Sirius Black s&#39;est en fait échappé d&#39;Azkaban pour le retrouver, lui. Il semblerait que l&#39;homme veuille tuer Henri afin de permettre à Lord Voldemort, son maître, de retrouver l&#39;étendue de son pouvoir.&quot;\n    ],\n    &quot;type&quot;: &quot;[Books Search Page] Add to Cart&quot;\n  },\n  &quot;quantity&quot;: 1\n}\n]</p>\n",
-            "rawdescription": "[\n{\n  \"book\": {\n    \"isbn\": \"c8fabf68-8374-48fe-a7ea-a00ccd07afff\",\n    \"title\": \"Henri Potier à l'école des sorciers\",\n    \"price\": 35,\n    \"cover\": \"https://firebasestorage.googleapis.com/v0/b/henri-potier.appspot.com/o/hp0.jpg?alt=media\",\n    \"synopsis\": [\n      \"Après la mort de ses parents (Lily et James Potier), Henri est recueilli par sa tante Pétunia (la sœur de Lily) et son oncle Vernon à l'âge d'un an. Ces derniers, animés depuis toujours d'une haine féroce envers les parents du garçon qu'ils qualifient de gens « bizarres », voire de « monstres », traitent froidement leur neveu et demeurent indifférents aux humiliations que leur fils Dudley lui fait subir. Henri ignore tout de l'histoire de ses parents, si ce n'est qu'ils ont été tués dans un accident de voiture\",\n      \"Le jour des 11 ans de Henri, un demi-géant du nom de Rubeus Hagrid vient le chercher pour l’emmener à Poudlard, une école de sorcellerie, où il est inscrit depuis sa naissance et attendu pour la prochaine rentrée. Hagrid lui révèle alors qu’il a toujours été un sorcier, tout comme l'étaient ses parents, tués en réalité par le plus puissant mage noir du monde de la sorcellerie, Voldemort (surnommé « Celui-Dont-On-Ne-Doit-Pas-Prononcer-Le-Nom »), après qu'ils ont refusé de se joindre à lui. Ce serait Henri lui-même, alors qu'il n'était encore qu'un bébé, qui aurait fait ricocher le sortilège que Voldemort lui destinait, neutralisant ses pouvoirs et le réduisant à l'état de créature quasi-insignifiante. Le fait d'avoir vécu son enfance chez son oncle et sa tante dépourvus de pouvoirs magiques lui a donc permis de grandir à l'abri de la notoriété qu'il a dans le monde des sorciers.\",\n      \"Henri entre donc à l’école de Poudlard, dirigée par le professeur Albus Dumbledore. Il est envoyé dans la maison Gryffondor par le « choixpeau ». Il y fait la connaissance de Ron Weasley et Hermione Granger, qui deviendront ses complices. Par ailleurs, Henri intègre rapidement l'équipe de Quidditch de sa maison, un sport collectif très populaire chez les sorciers se pratiquant sur des balais volants. Henri connaît probablement la plus heureuse année de sa vie, mais également la plus périlleuse, car Voldemort n'a pas totalement disparu et semble bien décidé à reprendre forme humaine.\"\n    ],\n    \"type\": \"[Books Search Page] Add to Cart\"\n  },\n  \"quantity\": 2\n},\n{\n  \"book\": {\n    \"isbn\": \"fcd1e6fa-a63f-4f75-9da4-b560020b6acc\",\n    \"title\": \"Henri Potier et le Prisonnier d'Azkaban\",\n    \"price\": 30,\n    \"cover\": \"https://firebasestorage.googleapis.com/v0/b/henri-potier.appspot.com/o/hp2.jpg?alt=media\",\n    \"synopsis\": [\n      \"Durant l'été, pour son treizième anniversaire, Henri reçoit plusieurs cartes de ses amis, notamment une lettre de Ron qui lui écrit d'Égypte, où il passe ses vacances avec sa famille. Une lettre du professeur McGonagall, directrice adjointe de Poudlard, lui informe que les élèves de troisième année auront la possibilité de visiter le village de Pré-au-Lard.\",\n      \"Le lendemain, les informations télévisées moldues annoncent l'évasion d'un très dangereux prisonnier du nom de Sirius Black et l'oncle et la tante de Henri s'inquiètent légèrement pour eux-mêmes. Plus tard, ils annoncent à Henri que la tante Marge séjournera une semaine chez eux, à Privet Drive. La tante Marge provoque Henri en traitant son père défunt d'ancien ivrogne. Henri s'énerve, perd le contrôle de sa magie et fait accidentellement gonfler la tante Marge comme un ballon. Alors que son oncle, furieux, ordonne à Henri de rendre à Marge son apparence normale, le garçon refuse et prend la fuite en pleine nuit, emportant sa valise et sa chouette Edwige.\",\n      \"Plus tard, sur le Chemin de traverse, Henri apprend avec surprise que Sirius Black s'est en fait échappé d'Azkaban pour le retrouver, lui. Il semblerait que l'homme veuille tuer Henri afin de permettre à Lord Voldemort, son maître, de retrouver l'étendue de son pouvoir.\"\n    ],\n    \"type\": \"[Books Search Page] Add to Cart\"\n  },\n  \"quantity\": 1\n}\n]",
+            "description": "",
+            "rawdescription": "",
             "type": "component",
-            "sourceCode": "import { ChangeDetectionStrategy, Component } from '@angular/core';\nimport { Store } from '@ngrx/store';\nimport { Observable } from 'rxjs';\n\nimport { ShoppingCartItem } from '../../store/shopping-cart';\nimport * as FromRoot from '../../../app.state';\n\n/**\n * [\n  {\n    \"book\": {\n      \"isbn\": \"c8fabf68-8374-48fe-a7ea-a00ccd07afff\",\n      \"title\": \"Henri Potier à l'école des sorciers\",\n      \"price\": 35,\n      \"cover\": \"https://firebasestorage.googleapis.com/v0/b/henri-potier.appspot.com/o/hp0.jpg?alt=media\",\n      \"synopsis\": [\n        \"Après la mort de ses parents (Lily et James Potier), Henri est recueilli par sa tante Pétunia (la sœur de Lily) et son oncle Vernon à l'âge d'un an. Ces derniers, animés depuis toujours d'une haine féroce envers les parents du garçon qu'ils qualifient de gens « bizarres », voire de « monstres », traitent froidement leur neveu et demeurent indifférents aux humiliations que leur fils Dudley lui fait subir. Henri ignore tout de l'histoire de ses parents, si ce n'est qu'ils ont été tués dans un accident de voiture\",\n        \"Le jour des 11 ans de Henri, un demi-géant du nom de Rubeus Hagrid vient le chercher pour l’emmener à Poudlard, une école de sorcellerie, où il est inscrit depuis sa naissance et attendu pour la prochaine rentrée. Hagrid lui révèle alors qu’il a toujours été un sorcier, tout comme l'étaient ses parents, tués en réalité par le plus puissant mage noir du monde de la sorcellerie, Voldemort (surnommé « Celui-Dont-On-Ne-Doit-Pas-Prononcer-Le-Nom »), après qu'ils ont refusé de se joindre à lui. Ce serait Henri lui-même, alors qu'il n'était encore qu'un bébé, qui aurait fait ricocher le sortilège que Voldemort lui destinait, neutralisant ses pouvoirs et le réduisant à l'état de créature quasi-insignifiante. Le fait d'avoir vécu son enfance chez son oncle et sa tante dépourvus de pouvoirs magiques lui a donc permis de grandir à l'abri de la notoriété qu'il a dans le monde des sorciers.\",\n        \"Henri entre donc à l’école de Poudlard, dirigée par le professeur Albus Dumbledore. Il est envoyé dans la maison Gryffondor par le « choixpeau ». Il y fait la connaissance de Ron Weasley et Hermione Granger, qui deviendront ses complices. Par ailleurs, Henri intègre rapidement l'équipe de Quidditch de sa maison, un sport collectif très populaire chez les sorciers se pratiquant sur des balais volants. Henri connaît probablement la plus heureuse année de sa vie, mais également la plus périlleuse, car Voldemort n'a pas totalement disparu et semble bien décidé à reprendre forme humaine.\"\n      ],\n      \"type\": \"[Books Search Page] Add to Cart\"\n    },\n    \"quantity\": 2\n  },\n  {\n    \"book\": {\n      \"isbn\": \"fcd1e6fa-a63f-4f75-9da4-b560020b6acc\",\n      \"title\": \"Henri Potier et le Prisonnier d'Azkaban\",\n      \"price\": 30,\n      \"cover\": \"https://firebasestorage.googleapis.com/v0/b/henri-potier.appspot.com/o/hp2.jpg?alt=media\",\n      \"synopsis\": [\n        \"Durant l'été, pour son treizième anniversaire, Henri reçoit plusieurs cartes de ses amis, notamment une lettre de Ron qui lui écrit d'Égypte, où il passe ses vacances avec sa famille. Une lettre du professeur McGonagall, directrice adjointe de Poudlard, lui informe que les élèves de troisième année auront la possibilité de visiter le village de Pré-au-Lard.\",\n        \"Le lendemain, les informations télévisées moldues annoncent l'évasion d'un très dangereux prisonnier du nom de Sirius Black et l'oncle et la tante de Henri s'inquiètent légèrement pour eux-mêmes. Plus tard, ils annoncent à Henri que la tante Marge séjournera une semaine chez eux, à Privet Drive. La tante Marge provoque Henri en traitant son père défunt d'ancien ivrogne. Henri s'énerve, perd le contrôle de sa magie et fait accidentellement gonfler la tante Marge comme un ballon. Alors que son oncle, furieux, ordonne à Henri de rendre à Marge son apparence normale, le garçon refuse et prend la fuite en pleine nuit, emportant sa valise et sa chouette Edwige.\",\n        \"Plus tard, sur le Chemin de traverse, Henri apprend avec surprise que Sirius Black s'est en fait échappé d'Azkaban pour le retrouver, lui. Il semblerait que l'homme veuille tuer Henri afin de permettre à Lord Voldemort, son maître, de retrouver l'étendue de son pouvoir.\"\n      ],\n      \"type\": \"[Books Search Page] Add to Cart\"\n    },\n    \"quantity\": 1\n  }\n]\n */\n\n@Component({\n  selector: 'app-shopping-cart',\n  templateUrl: './shopping-cart.component.html',\n  styleUrls: ['./shopping-cart.component.scss'],\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class ShoppingCartComponent {\n\n  _shoppingCartItems$: Observable<ShoppingCartItem[]>;\n\n  constructor(private _store: Store<FromRoot.AppState>) {\n    this._shoppingCartItems$ = this._store.select(FromRoot.getShoppingCartItems);\n  }\n\n  bestOffer(): void {\n\n  }\n\n}\n",
+            "sourceCode": "import { ChangeDetectionStrategy, Component } from '@angular/core';\nimport { Store } from '@ngrx/store';\nimport { combineLatest, Observable } from 'rxjs';\nimport { map, switchMap } from 'rxjs/operators';\n\nimport { ShoppingCartItem } from '../../store/shopping-cart';\nimport * as FromRoot from '../../../app.state';\nimport { BooksService } from '../../../api/books.service';\nimport { CommercialOffers } from '../../../api/books';\nimport { ShoppingCartService, BestOffer } from '../../services/shopping-cart.service';\n\n@Component({\n  selector: 'app-shopping-cart',\n  templateUrl: './shopping-cart.component.html',\n  styleUrls: ['./shopping-cart.component.scss'],\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class ShoppingCartComponent {\n\n  _shoppingCartItems$: Observable<ShoppingCartItem[]>;\n  _totalPrice$: Observable<number>;\n  _bestOffer$: Observable<BestOffer>;\n\n  constructor(\n    private _store: Store<FromRoot.AppState>,\n    private _shoppingCartService: ShoppingCartService,\n    private _booksService: BooksService\n  ) {\n    this._shoppingCartItems$ = this._store.select(FromRoot.getShoppingCartItems);\n    this._totalPrice$ = this._store.select(FromRoot.getTotalPrice);\n\n    const offers$: Observable<CommercialOffers> = this._shoppingCartItems$\n      .pipe(\n        switchMap(items => this._booksService.getCommercialOffers(items.map(i => i.book.isbn)))\n      );\n\n    this._bestOffer$ = combineLatest([\n        this._totalPrice$,\n        offers$\n      ])\n      .pipe(\n        map(([total, { offers }]) => this._shoppingCartService.getBestOffer(total, offers))\n      );\n  }\n\n}\n",
             "assetsDirs": [],
             "styleUrlsData": [
                 {
@@ -592,9 +896,17 @@
                     {
                         "name": "_store",
                         "type": "Store<FromRoot.AppState>"
+                    },
+                    {
+                        "name": "_shoppingCartService",
+                        "type": "ShoppingCartService"
+                    },
+                    {
+                        "name": "_booksService",
+                        "type": "BooksService"
                     }
                 ],
-                "line": 51,
+                "line": 22,
                 "jsdoctags": [
                     {
                         "name": "_store",
@@ -602,15 +914,30 @@
                         "tagName": {
                             "text": "param"
                         }
+                    },
+                    {
+                        "name": "_shoppingCartService",
+                        "type": "ShoppingCartService",
+                        "tagName": {
+                            "text": "param"
+                        }
+                    },
+                    {
+                        "name": "_booksService",
+                        "type": "BooksService",
+                        "tagName": {
+                            "text": "param"
+                        }
                     }
                 ]
             },
-            "templateData": "<div class=\"row my-4\">\n  <div class=\"card col-md-8\">\n    <div class=\"card-body\">\n      <h4 class=\"card-title\">Panier</h4>\n      <ng-container *ngIf=\"_shoppingCartItems$ | async as items\">\n        <ng-container *ngIf=\"items.length > 0; else emptyCartTemplate\">\n\n          <app-shopping-cart-summary [items]=\"items\"></app-shopping-cart-summary>\n\n        </ng-container>\n\n        <ng-template #emptyCartTemplate>\n          Votre panier est vide\n        </ng-template>\n      </ng-container>\n    </div>\n  </div>\n</div>\n"
+            "templateData": "<div class=\"row my-4\">\n  <div class=\"card col-md-8\">\n    <div class=\"card-body\">\n      <h4 class=\"card-title\">Panier</h4>\n      <ng-container *ngIf=\"_shoppingCartItems$ | async as items\">\n        <ng-container *ngIf=\"items.length > 0; else emptyCartTemplate\">\n\n          <app-shopping-cart-summary [items]=\"items\"\n                                     [total]=\"_totalPrice$ | async\"\n                                     [bestOffer]=\"_bestOffer$ | async\">\n          </app-shopping-cart-summary>\n\n        </ng-container>\n\n        <ng-template #emptyCartTemplate>\n          Votre panier est vide\n        </ng-template>\n      </ng-container>\n    </div>\n  </div>\n</div>\n"
         },
         {
             "name": "ShoppingCartSummaryComponent",
-            "id": "component-ShoppingCartSummaryComponent-ddd685d4049d71a37c27493d6417bc1d",
+            "id": "component-ShoppingCartSummaryComponent-01d391f78ae72e54ccd574c1b176cb07",
             "file": "src/app/shopping-cart/components/shopping-cart-summary/shopping-cart-summary.component.ts",
+            "changeDetection": "ChangeDetectionStrategy.OnPush",
             "encapsulation": [],
             "entryComponents": [],
             "inputs": [],
@@ -627,44 +954,32 @@
             "viewProviders": [],
             "inputsClass": [
                 {
+                    "name": "bestOffer",
+                    "line": 21,
+                    "type": "BestOffer | null"
+                },
+                {
                     "name": "items",
                     "defaultValue": "[]",
-                    "line": 13,
+                    "line": 15,
                     "type": "ShoppingCartItem[]"
+                },
+                {
+                    "name": "total",
+                    "defaultValue": "0",
+                    "line": 18,
+                    "type": "number | null"
                 }
             ],
             "outputsClass": [],
             "propertiesClass": [],
-            "methodsClass": [
-                {
-                    "name": "getTotalPrice",
-                    "args": [
-                        {
-                            "name": "items",
-                            "type": "ShoppingCartItem[]"
-                        }
-                    ],
-                    "optional": false,
-                    "returnType": "number",
-                    "typeParameters": [],
-                    "line": 17,
-                    "jsdoctags": [
-                        {
-                            "name": "items",
-                            "type": "ShoppingCartItem[]",
-                            "tagName": {
-                                "text": "param"
-                            }
-                        }
-                    ]
-                }
-            ],
+            "methodsClass": [],
             "hostBindings": [],
             "hostListeners": [],
             "description": "",
             "rawdescription": "",
             "type": "component",
-            "sourceCode": "import { Component, Input, OnInit } from '@angular/core';\n\nimport { ShoppingCartItem } from '../../store/shopping-cart';\n\n@Component({\n  selector: 'app-shopping-cart-summary',\n  templateUrl: './shopping-cart-summary.component.html',\n  styleUrls: ['./shopping-cart-summary.component.scss']\n})\nexport class ShoppingCartSummaryComponent {\n\n  @Input()\n  items: ShoppingCartItem[] = [];\n\n  constructor() { }\n\n  getTotalPrice(items: ShoppingCartItem[]): number {\n    return items.reduce((acc, item) => acc + (item.quantity * item.book.price), 0);\n  }\n}\n",
+            "sourceCode": "import { ChangeDetectionStrategy, Component, Input } from '@angular/core';\n\nimport { BestOffer } from '../../services/shopping-cart.service';\nimport { ShoppingCartItem } from '../../store/shopping-cart';\n\n@Component({\n  selector: 'app-shopping-cart-summary',\n  templateUrl: './shopping-cart-summary.component.html',\n  styleUrls: ['./shopping-cart-summary.component.scss'],\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class ShoppingCartSummaryComponent {\n\n  @Input()\n  items: ShoppingCartItem[] = [];\n\n  @Input()\n  total: number | null = 0;\n\n  @Input()\n  bestOffer?: BestOffer | null;\n\n  get finalPrice(): number | null {\n    if (this.bestOffer && this.total) {\n      return this.total - this.bestOffer.discount;\n    } else {\n      return this.total;\n    }\n  }\n\n  constructor() { }\n}\n",
             "assetsDirs": [],
             "styleUrlsData": [
                 {
@@ -677,9 +992,20 @@
                 "name": "constructor",
                 "description": "",
                 "args": [],
-                "line": 13
+                "line": 29
             },
-            "templateData": "<table class=\"table\" >\n  <tbody>\n    <tr *ngFor=\"let item of items\">\n      <td>{{ item.book.title }}</td>\n      <td class=\"text-end\">{{ item.quantity }} x {{ item.book.price | currency: 'EUR' }}</td>\n    </tr>\n  </tbody>\n  <tfoot>\n    <tr>\n      <td scope=\"row\">Total</td>\n      <td class=\"text-end\">{{ getTotalPrice(items) | currency: 'EUR' }}</td>\n    </tr>\n  </tfoot>\n</table>\n"
+            "accessors": {
+                "finalPrice": {
+                    "name": "finalPrice",
+                    "getSignature": {
+                        "name": "finalPrice",
+                        "type": "",
+                        "returnType": "number | null",
+                        "line": 23
+                    }
+                }
+            },
+            "templateData": "<table class=\"table\" >\n  <tbody>\n    <tr *ngFor=\"let item of items\">\n      <td>{{ item.book.title }}</td>\n      <td class=\"text-end\">{{ item.quantity }} x {{ item.book.price | currency: 'EUR' }}</td>\n    </tr>\n  </tbody>\n  <tfoot>\n    <tr *ngIf=\"bestOffer\" class=\"text-danger\">\n      <td scope=\"row\" [ngSwitch]=\"bestOffer.offer.type\">\n        <ng-container *ngSwitchCase=\"'percentage'\">\n          Offre -{{ bestOffer.offer.value / 100 | percent }}\n        </ng-container>\n        <ng-container *ngSwitchCase=\"'minus'\">\n          Offre -{{ bestOffer.offer.value | currency: 'EUR' }}\n        </ng-container>\n        <ng-container *ngSwitchCase=\"'slice'\">\n          Offre -{{ bestOffer.offer.value | currency: 'EUR' }} chaque {{ $any(bestOffer.offer).sliceValue | currency: 'EUR' }}\n        </ng-container>\n      </td>\n      <td class=\"text-end\">-{{ bestOffer.discount | currency: 'EUR' }}</td>\n    </tr>\n    <tr>\n      <td scope=\"row\">Total</td>\n      <td class=\"text-end\">\n        <span *ngIf=\"bestOffer\" class=\"text-decoration-line-through\">{{ total | currency: 'EUR' }}</span>&nbsp;\n        <span>{{ finalPrice | currency: 'EUR' }}</span>\n      </td>\n    </tr>\n  </tfoot>\n</table>\n"
         }
     ],
     "modules": [
@@ -767,13 +1093,16 @@
                     "type": "declarations",
                     "elements": [
                         {
-                            "name": "BookListComponent"
+                            "name": "BookCardComponent"
                         },
                         {
-                            "name": "BookListItemComponent"
+                            "name": "BookQuantityComponent"
                         },
                         {
                             "name": "BooksSearchComponent"
+                        },
+                        {
+                            "name": "SearchBooksPipe"
                         }
                     ]
                 },
@@ -938,12 +1267,28 @@
     "miscellaneous": {
         "variables": [
             {
+                "name": "actionsData",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "src/app/books/components/book-card/book-quantity/book-quantity.stories.ts",
+                "type": "object",
+                "defaultValue": "{\n  addToCart: action('addToCart'),\n  removeFromCart: action('removeFromCart'),\n}"
+            },
+            {
                 "name": "addToCart",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
                 "file": "src/app/books/store/books-search.actions.ts",
                 "type": "",
                 "defaultValue": "createAction(\n  '[Books Search Page] Add to Cart',\n  props<Book>()\n)"
+            },
+            {
+                "name": "CartWithOffer",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "src/app/shopping-cart/components/shopping-cart-summary/shopping-cart-summary.stories.ts",
+                "type": "",
+                "defaultValue": "Template.bind({})"
             },
             {
                 "name": "context",
@@ -970,6 +1315,14 @@
                 "defaultValue": "Template.bind({})"
             },
             {
+                "name": "Default",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "src/app/books/components/book-card/book-quantity/book-quantity.stories.ts",
+                "type": "",
+                "defaultValue": "Template.bind({})"
+            },
+            {
                 "name": "environment",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
@@ -984,6 +1337,14 @@
                 "file": "src/environments/environment.ts",
                 "type": "object",
                 "defaultValue": "{\n  production: false\n}"
+            },
+            {
+                "name": "getShoppingCartItemQuantity",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "src/app/app.state.ts",
+                "type": "",
+                "defaultValue": "(isbn: string) => {\n  return createSelector(\n    getShoppingCartState,\n    (shoppingCartState: ShoppingCartState) => {\n      const item = shoppingCartState.items.find(i => i.book.isbn === isbn);\n\n      if (item) {\n        return item.quantity;\n      } else {\n        return 0;\n      }\n    }\n  );\n}"
             },
             {
                 "name": "getShoppingCartItems",
@@ -1010,12 +1371,28 @@
                 "defaultValue": "(state: AppState) => state.shoppingCart"
             },
             {
+                "name": "getTotalPrice",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "src/app/app.state.ts",
+                "type": "",
+                "defaultValue": "createSelector(\n  getShoppingCartItems,\n  (items: ShoppingCartItem[]) => items.reduce((acc, item) => acc + (item.quantity * item.book.price), 0)\n)"
+            },
+            {
                 "name": "initialState",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
                 "file": "src/app/shopping-cart/store/shopping-cart.reducer.ts",
                 "type": "ShoppingCartState",
                 "defaultValue": "{\n  items: []\n}"
+            },
+            {
+                "name": "removeFromCart",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "src/app/books/store/books-search.actions.ts",
+                "type": "",
+                "defaultValue": "createAction(\n  '[Books Search Page] Remove from Cart',\n  props<Book>()\n)"
             },
             {
                 "name": "require",
@@ -1030,7 +1407,7 @@
                 "subtype": "variable",
                 "file": "src/app/shopping-cart/store/shopping-cart.reducer.ts",
                 "type": "",
-                "defaultValue": "createReducer(\n  initialState,\n  on(BooksSearchPageActions.addToCart, (state, book) => {\n    const index = state.items.findIndex(item => item.book.isbn === book.isbn);\n\n    if (index >= 0) {\n      return {\n        ...state,\n        items: [\n          ...state.items.slice(0, index),\n          {\n            book,\n            quantity: state.items[index].quantity + 1\n          },\n          ...state.items.slice(index + 1)\n        ]\n      };\n    } else {\n      return {\n        ...state,\n        items: [\n          ...state.items,\n          {\n            book,\n            quantity: 1\n          }\n        ]\n      };\n    }\n})\n)"
+                "defaultValue": "createReducer(\n  initialState,\n  on(BooksSearchPageActions.addToCart, (state, book) => {\n    const index = state.items.findIndex(item => item.book.isbn === book.isbn);\n\n    if (index >= 0) {\n      return {\n        ...state,\n        items: [\n          ...state.items.slice(0, index),\n          {\n            book,\n            quantity: state.items[index].quantity + 1\n          },\n          ...state.items.slice(index + 1)\n        ]\n      };\n    } else {\n      return {\n        ...state,\n        items: [\n          ...state.items,\n          {\n            book,\n            quantity: 1\n          }\n        ]\n      };\n    }\n  }),\n  on(BooksSearchPageActions.removeFromCart, (state, book) => {\n    const index = state.items.findIndex(item => item.book.isbn === book.isbn);\n\n    if (index >= 0) {\n      if (state.items[index].quantity - 1 === 0) {\n        return {\n          ...state,\n          items: [\n            ...state.items.slice(0, index),\n            ...state.items.slice(index + 1)\n          ]\n        };\n      } else {\n        return {\n          ...state,\n          items: [\n            ...state.items.slice(0, index),\n            {\n              book,\n              quantity: state.items[index].quantity - 1\n            },\n            ...state.items.slice(index + 1)\n          ]\n        };\n      }\n    } else {\n      return state;\n    }\n  })\n)"
             },
             {
                 "name": "Template",
@@ -1047,6 +1424,22 @@
                 "file": "src/app/shopping-cart/components/shopping-cart-summary/shopping-cart-summary.stories.ts",
                 "type": "Story<ShoppingCartSummaryComponent>",
                 "defaultValue": "args => ({\n  props: {\n    ...args\n  }\n})"
+            },
+            {
+                "name": "Template",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "src/app/books/components/book-card/book-quantity/book-quantity.stories.ts",
+                "type": "Story<BookQuantityComponent>",
+                "defaultValue": "args => ({\n  props: {\n    ...args,\n    addToCart: actionsData.addToCart,\n    removeFromCart: actionsData.removeFromCart\n  }\n})"
+            },
+            {
+                "name": "WithQuantity",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "src/app/books/components/book-card/book-quantity/book-quantity.stories.ts",
+                "type": "",
+                "defaultValue": "Template.bind({})"
             }
         ],
         "functions": [
@@ -1080,9 +1473,53 @@
                 ]
             }
         ],
-        "typealiases": [],
+        "typealiases": [
+            {
+                "name": "Offer",
+                "ctype": "miscellaneous",
+                "subtype": "typealias",
+                "rawtype": "PercentageOffer | MinusOffer | SliceOffer",
+                "file": "src/app/api/books.ts",
+                "description": "",
+                "kind": 168
+            }
+        ],
         "enumerations": [],
         "groupedVariables": {
+            "src/app/books/components/book-card/book-quantity/book-quantity.stories.ts": [
+                {
+                    "name": "actionsData",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "src/app/books/components/book-card/book-quantity/book-quantity.stories.ts",
+                    "type": "object",
+                    "defaultValue": "{\n  addToCart: action('addToCart'),\n  removeFromCart: action('removeFromCart'),\n}"
+                },
+                {
+                    "name": "Default",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "src/app/books/components/book-card/book-quantity/book-quantity.stories.ts",
+                    "type": "",
+                    "defaultValue": "Template.bind({})"
+                },
+                {
+                    "name": "Template",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "src/app/books/components/book-card/book-quantity/book-quantity.stories.ts",
+                    "type": "Story<BookQuantityComponent>",
+                    "defaultValue": "args => ({\n  props: {\n    ...args,\n    addToCart: actionsData.addToCart,\n    removeFromCart: actionsData.removeFromCart\n  }\n})"
+                },
+                {
+                    "name": "WithQuantity",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "src/app/books/components/book-card/book-quantity/book-quantity.stories.ts",
+                    "type": "",
+                    "defaultValue": "Template.bind({})"
+                }
+            ],
             "src/app/books/store/books-search.actions.ts": [
                 {
                     "name": "addToCart",
@@ -1091,6 +1528,40 @@
                     "file": "src/app/books/store/books-search.actions.ts",
                     "type": "",
                     "defaultValue": "createAction(\n  '[Books Search Page] Add to Cart',\n  props<Book>()\n)"
+                },
+                {
+                    "name": "removeFromCart",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "src/app/books/store/books-search.actions.ts",
+                    "type": "",
+                    "defaultValue": "createAction(\n  '[Books Search Page] Remove from Cart',\n  props<Book>()\n)"
+                }
+            ],
+            "src/app/shopping-cart/components/shopping-cart-summary/shopping-cart-summary.stories.ts": [
+                {
+                    "name": "CartWithOffer",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "src/app/shopping-cart/components/shopping-cart-summary/shopping-cart-summary.stories.ts",
+                    "type": "",
+                    "defaultValue": "Template.bind({})"
+                },
+                {
+                    "name": "Default",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "src/app/shopping-cart/components/shopping-cart-summary/shopping-cart-summary.stories.ts",
+                    "type": "",
+                    "defaultValue": "Template.bind({})"
+                },
+                {
+                    "name": "Template",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "src/app/shopping-cart/components/shopping-cart-summary/shopping-cart-summary.stories.ts",
+                    "type": "Story<ShoppingCartSummaryComponent>",
+                    "defaultValue": "args => ({\n  props: {\n    ...args\n  }\n})"
                 }
             ],
             "src/test.ts": [
@@ -1128,24 +1599,6 @@
                     "defaultValue": "args => ({\n  props: {\n    ...args\n  }\n})"
                 }
             ],
-            "src/app/shopping-cart/components/shopping-cart-summary/shopping-cart-summary.stories.ts": [
-                {
-                    "name": "Default",
-                    "ctype": "miscellaneous",
-                    "subtype": "variable",
-                    "file": "src/app/shopping-cart/components/shopping-cart-summary/shopping-cart-summary.stories.ts",
-                    "type": "",
-                    "defaultValue": "Template.bind({})"
-                },
-                {
-                    "name": "Template",
-                    "ctype": "miscellaneous",
-                    "subtype": "variable",
-                    "file": "src/app/shopping-cart/components/shopping-cart-summary/shopping-cart-summary.stories.ts",
-                    "type": "Story<ShoppingCartSummaryComponent>",
-                    "defaultValue": "args => ({\n  props: {\n    ...args\n  }\n})"
-                }
-            ],
             "src/environments/environment.prod.ts": [
                 {
                     "name": "environment",
@@ -1167,6 +1620,14 @@
                 }
             ],
             "src/app/app.state.ts": [
+                {
+                    "name": "getShoppingCartItemQuantity",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "src/app/app.state.ts",
+                    "type": "",
+                    "defaultValue": "(isbn: string) => {\n  return createSelector(\n    getShoppingCartState,\n    (shoppingCartState: ShoppingCartState) => {\n      const item = shoppingCartState.items.find(i => i.book.isbn === isbn);\n\n      if (item) {\n        return item.quantity;\n      } else {\n        return 0;\n      }\n    }\n  );\n}"
+                },
                 {
                     "name": "getShoppingCartItems",
                     "ctype": "miscellaneous",
@@ -1190,6 +1651,14 @@
                     "file": "src/app/app.state.ts",
                     "type": "",
                     "defaultValue": "(state: AppState) => state.shoppingCart"
+                },
+                {
+                    "name": "getTotalPrice",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "src/app/app.state.ts",
+                    "type": "",
+                    "defaultValue": "createSelector(\n  getShoppingCartItems,\n  (items: ShoppingCartItem[]) => items.reduce((acc, item) => acc + (item.quantity * item.book.price), 0)\n)"
                 }
             ],
             "src/app/shopping-cart/store/shopping-cart.reducer.ts": [
@@ -1207,7 +1676,7 @@
                     "subtype": "variable",
                     "file": "src/app/shopping-cart/store/shopping-cart.reducer.ts",
                     "type": "",
-                    "defaultValue": "createReducer(\n  initialState,\n  on(BooksSearchPageActions.addToCart, (state, book) => {\n    const index = state.items.findIndex(item => item.book.isbn === book.isbn);\n\n    if (index >= 0) {\n      return {\n        ...state,\n        items: [\n          ...state.items.slice(0, index),\n          {\n            book,\n            quantity: state.items[index].quantity + 1\n          },\n          ...state.items.slice(index + 1)\n        ]\n      };\n    } else {\n      return {\n        ...state,\n        items: [\n          ...state.items,\n          {\n            book,\n            quantity: 1\n          }\n        ]\n      };\n    }\n})\n)"
+                    "defaultValue": "createReducer(\n  initialState,\n  on(BooksSearchPageActions.addToCart, (state, book) => {\n    const index = state.items.findIndex(item => item.book.isbn === book.isbn);\n\n    if (index >= 0) {\n      return {\n        ...state,\n        items: [\n          ...state.items.slice(0, index),\n          {\n            book,\n            quantity: state.items[index].quantity + 1\n          },\n          ...state.items.slice(index + 1)\n        ]\n      };\n    } else {\n      return {\n        ...state,\n        items: [\n          ...state.items,\n          {\n            book,\n            quantity: 1\n          }\n        ]\n      };\n    }\n  }),\n  on(BooksSearchPageActions.removeFromCart, (state, book) => {\n    const index = state.items.findIndex(item => item.book.isbn === book.isbn);\n\n    if (index >= 0) {\n      if (state.items[index].quantity - 1 === 0) {\n        return {\n          ...state,\n          items: [\n            ...state.items.slice(0, index),\n            ...state.items.slice(index + 1)\n          ]\n        };\n      } else {\n        return {\n          ...state,\n          items: [\n            ...state.items.slice(0, index),\n            {\n              book,\n              quantity: state.items[index].quantity - 1\n            },\n            ...state.items.slice(index + 1)\n          ]\n        };\n      }\n    } else {\n      return state;\n    }\n  })\n)"
                 }
             ]
         },
@@ -1245,7 +1714,19 @@
             ]
         },
         "groupedEnumerations": {},
-        "groupedTypeAliases": {}
+        "groupedTypeAliases": {
+            "src/app/api/books.ts": [
+                {
+                    "name": "Offer",
+                    "ctype": "miscellaneous",
+                    "subtype": "typealias",
+                    "rawtype": "PercentageOffer | MinusOffer | SliceOffer",
+                    "file": "src/app/api/books.ts",
+                    "description": "",
+                    "kind": 168
+                }
+            ]
+        }
     },
     "routes": {
         "name": "<root>",
@@ -1322,7 +1803,7 @@
                 "linktype": "injectable",
                 "name": "BooksService",
                 "coveragePercent": 0,
-                "coverageCount": "0/6",
+                "coverageCount": "0/5",
                 "status": "low"
             },
             {
@@ -1332,6 +1813,42 @@
                 "name": "Book",
                 "coveragePercent": 0,
                 "coverageCount": "0/6",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/api/books.ts",
+                "type": "interface",
+                "linktype": "interface",
+                "name": "CommercialOffers",
+                "coveragePercent": 0,
+                "coverageCount": "0/2",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/api/books.ts",
+                "type": "interface",
+                "linktype": "interface",
+                "name": "MinusOffer",
+                "coveragePercent": 0,
+                "coverageCount": "0/3",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/api/books.ts",
+                "type": "interface",
+                "linktype": "interface",
+                "name": "PercentageOffer",
+                "coveragePercent": 0,
+                "coverageCount": "0/3",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/api/books.ts",
+                "type": "interface",
+                "linktype": "interface",
+                "name": "SliceOffer",
+                "coveragePercent": 0,
+                "coverageCount": "0/4",
                 "status": "low"
             },
             {
@@ -1350,6 +1867,16 @@
                 "name": "AppState",
                 "coveragePercent": 0,
                 "coverageCount": "0/2",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/app.state.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "getShoppingCartItemQuantity",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
                 "status": "low"
             },
             {
@@ -1383,21 +1910,71 @@
                 "status": "low"
             },
             {
-                "filePath": "src/app/books/components/book-list/book-list-item/book-list-item.component.ts",
-                "type": "component",
-                "linktype": "component",
-                "name": "BookListItemComponent",
+                "filePath": "src/app/app.state.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "getTotalPrice",
                 "coveragePercent": 0,
-                "coverageCount": "0/3",
+                "coverageCount": "0/1",
                 "status": "low"
             },
             {
-                "filePath": "src/app/books/components/book-list/book-list.component.ts",
+                "filePath": "src/app/books/components/book-card/book-card.component.ts",
                 "type": "component",
                 "linktype": "component",
-                "name": "BookListComponent",
+                "name": "BookCardComponent",
+                "coveragePercent": 0,
+                "coverageCount": "0/5",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/books/components/book-card/book-quantity/book-quantity.component.ts",
+                "type": "component",
+                "linktype": "component",
+                "name": "BookQuantityComponent",
                 "coveragePercent": 0,
                 "coverageCount": "0/4",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/books/components/book-card/book-quantity/book-quantity.stories.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "actionsData",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/books/components/book-card/book-quantity/book-quantity.stories.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "Default",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/books/components/book-card/book-quantity/book-quantity.stories.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "Template",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/books/components/book-card/book-quantity/book-quantity.stories.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "WithQuantity",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
                 "status": "low"
             },
             {
@@ -1406,7 +1983,16 @@
                 "linktype": "component",
                 "name": "BooksSearchComponent",
                 "coveragePercent": 0,
-                "coverageCount": "0/4",
+                "coverageCount": "0/7",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/books/pipes/search-books.pipe.ts",
+                "type": "pipe",
+                "linktype": "pipe",
+                "name": "SearchBooksPipe",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
                 "status": "low"
             },
             {
@@ -1415,6 +2001,16 @@
                 "linktype": "miscellaneous",
                 "linksubtype": "variable",
                 "name": "addToCart",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/books/store/books-search.actions.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "removeFromCart",
                 "coveragePercent": 0,
                 "coverageCount": "0/1",
                 "status": "low"
@@ -1454,7 +2050,17 @@
                 "linktype": "component",
                 "name": "ShoppingCartSummaryComponent",
                 "coveragePercent": 0,
-                "coverageCount": "0/4",
+                "coverageCount": "0/5",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/shopping-cart/components/shopping-cart-summary/shopping-cart-summary.stories.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "CartWithOffer",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
                 "status": "low"
             },
             {
@@ -1482,8 +2088,26 @@
                 "type": "component",
                 "linktype": "component",
                 "name": "ShoppingCartComponent",
-                "coveragePercent": 25,
-                "coverageCount": "1/4",
+                "coveragePercent": 0,
+                "coverageCount": "0/5",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/shopping-cart/services/shopping-cart.service.ts",
+                "type": "injectable",
+                "linktype": "injectable",
+                "name": "ShoppingCartService",
+                "coveragePercent": 0,
+                "coverageCount": "0/4",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/shopping-cart/services/shopping-cart.service.ts",
+                "type": "interface",
+                "linktype": "interface",
+                "name": "BestOffer",
+                "coveragePercent": 0,
+                "coverageCount": "0/3",
                 "status": "low"
             },
             {

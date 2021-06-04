@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 
-import { BestOffer } from '../../services/shopping-cart.service';
-import { ShoppingCartItem } from '../../store/shopping-cart';
+import { BestOffer } from '../../models/commercial-offers';
+import { ShoppingCartItem } from '../../models/shopping-cart';
 
 @Component({
   selector: 'app-shopping-cart-summary',

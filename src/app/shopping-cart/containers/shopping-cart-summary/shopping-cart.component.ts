@@ -3,11 +3,12 @@ import { Store } from '@ngrx/store';
 import { combineLatest, Observable } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 
-import { ShoppingCartItem } from '../../store/shopping-cart';
-import * as FromRoot from '../../../app.state';
-import { BooksService } from '../../../api/books.service';
-import { Offer } from '../../../api/books';
-import { ShoppingCartService, BestOffer } from '../../services/shopping-cart.service';
+import { ShoppingCartItem } from '../../models/shopping-cart';
+import * as FromShoppingCart from '../../store/shopping-cart.selectors';
+import { AppState } from '../../../app.state';
+import { BestOffer, CommercialOffers } from '../../models/commercial-offers';
+import { ShoppingCartService } from '../../services/shopping-cart.service';
+import { CommercialOffersService } from '../../services/commercial-offers.service';
 
 @Component({
   selector: 'app-shopping-cart',
@@ -18,20 +19,22 @@ import { ShoppingCartService, BestOffer } from '../../services/shopping-cart.ser
 export class ShoppingCartComponent {
 
   _shoppingCartItems$: Observable<ShoppingCartItem[]>;
+  _itemsCount$: Observable<number>;
   _totalPrice$: Observable<number>;
   _bestOffer$: Observable<BestOffer>;
 
   constructor(
-    private _store: Store<FromRoot.AppState>,
+    private _store: Store<AppState>,
     private _shoppingCartService: ShoppingCartService,
-    private _booksService: BooksService
+    private _commercialOffersService: CommercialOffersService
   ) {
-    this._shoppingCartItems$ = this._store.select(FromRoot.getShoppingCartItems);
-    this._totalPrice$ = this._store.select(FromRoot.getTotalPrice);
+    this._shoppingCartItems$ = this._store.select(FromShoppingCart.getShoppingCartItems);
+    this._itemsCount$ = this._store.select(FromShoppingCart.getShoppingCartItemsCount);
+    this._totalPrice$ = this._store.select(FromShoppingCart.getTotalPrice);
 
-    const offers$: Observable<{ offers: Offer[] }> = this._shoppingCartItems$
+    const offers$: Observable<CommercialOffers> = this._shoppingCartItems$
       .pipe(
-        switchMap(items => this._booksService.getCommercialOffers(items.map(i => i.book.isbn)))
+        switchMap(items => this._commercialOffersService.getCommercialOffers(items.map(i => i.book.isbn)))
       );
 
     this._bestOffer$ = combineLatest([

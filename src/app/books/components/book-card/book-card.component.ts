@@ -6,7 +6,7 @@ import {
   Output
 } from '@angular/core';
 
-import { Book } from '../../../api/books';
+import { Book } from '../../models/books';
 
 @Component({
   selector: 'app-book-card',

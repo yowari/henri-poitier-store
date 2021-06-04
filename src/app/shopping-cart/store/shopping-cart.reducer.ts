@@ -1,19 +1,11 @@
 import { Action, createReducer, on } from '@ngrx/store';
 
-import * as BooksSearchPageActions from '../../books/store/books-search.actions';
-import { ShoppingCartItem } from './shopping-cart';
-
-export interface ShoppingCartState {
-  items: ShoppingCartItem[]
-}
-
-export const initialState: ShoppingCartState = {
-  items: []
-}
+import { ShoppingCartState, initialState } from './shopping-cart.state';
+import * as ShoppingCartActions from './shopping-cart.actions';
 
 export const shoppingCartReducer = createReducer(
   initialState,
-  on(BooksSearchPageActions.addToCart, (state, book) => {
+  on(ShoppingCartActions.addToCart, (state, book) => {
     const index = state.items.findIndex(item => item.book.isbn === book.isbn);
 
     if (index >= 0) {
@@ -41,7 +33,7 @@ export const shoppingCartReducer = createReducer(
       };
     }
   }),
-  on(BooksSearchPageActions.removeFromCart, (state, book) => {
+  on(ShoppingCartActions.removeFromCart, (state, book) => {
     const index = state.items.findIndex(item => item.book.isbn === book.isbn);
 
     if (index >= 0) {

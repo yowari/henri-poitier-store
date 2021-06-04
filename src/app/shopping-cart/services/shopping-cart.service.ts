@@ -1,21 +1,14 @@
 import { Injectable } from '@angular/core';
 
-import { Offer } from '../../api/books';
-
-export interface BestOffer {
-  offer: Offer;
-  discount: number;
-}
+import { BestOffer, Offer } from '../models/commercial-offers';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ShoppingCartService {
 
-  constructor() { }
-
   getBestOffer(total: number, offers: Offer[]): BestOffer {
-    const discounts = offers.map(offer => this.getDiscount(total, offer));
+    const discounts = offers.map(offer => this.calculateDiscount(total, offer));
     let minimalPriceIndex = 0;
 
     for (let i = 0; i < discounts.length; i++) {
@@ -30,7 +23,7 @@ export class ShoppingCartService {
     };
   }
 
-  getDiscount(total: number, offer: Offer): number {
+  calculateDiscount(total: number, offer: Offer): number {
     switch (offer.type) {
       case 'minus':
         return offer.value;
@@ -43,16 +36,4 @@ export class ShoppingCartService {
     }
   }
 
-  // applyOffer(total: number, offer: Offer): number {
-  //   switch (offer.type) {
-  //     case 'minus':
-  //       return total - offer.value;
-  //     case 'percentage':
-  //       return total - (total * (offer.value / 100));
-  //     case 'slice':
-  //         return total - (Math.floor(total / offer.sliceValue) * offer.value);
-  //     default:
-  //       return total;
-  //   }
-  // }
 }

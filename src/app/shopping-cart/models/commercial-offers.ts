@@ -1,10 +1,8 @@
-export interface Book {
-  isbn: string;
-  title: string;
-  price: number;
-  cover: string;
-  synopsis: string[];
+export interface CommercialOffers {
+  offers: Offer[];
 }
+
+export type Offer = PercentageOffer | MinusOffer | SliceOffer;
 
 export interface PercentageOffer {
   type: 'percentage';
@@ -22,4 +20,7 @@ export interface SliceOffer {
   sliceValue: number;
 }
 
-export type Offer = PercentageOffer | MinusOffer | SliceOffer;
+export interface BestOffer {
+  offer: Offer;
+  discount: number;
+}

@@ -1,4 +1,4 @@
-import { Book } from '../../api/books';
+import { Book } from '../../books/models/books';
 
 export interface ShoppingCartItem {
   quantity: number;

@@ -2,11 +2,11 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 
-import { Book } from '../../../api/books';
-import { BooksService } from '../../../api/books.service';
-import * as FromRoot from '../../../app.state';
-import { addToCart, removeFromCart } from '../../store/books-search.actions';
-import { ShoppingCartItem } from '../../../shopping-cart/store/shopping-cart';
+import { Book } from '../../models/books';
+import { BooksService } from '../../services/books.service';
+import { AppState } from '../../../app.state';
+import * as FromShoppingCart from '../../../shopping-cart/store/shopping-cart.selectors';
+import { addToCart, removeFromCart } from '../../../shopping-cart/store/shopping-cart.actions';
 
 @Component({
   selector: 'app-books-search',
@@ -20,7 +20,7 @@ export class BooksSearchComponent {
   _searchText: string = '';
 
   constructor(
-    private _store: Store<FromRoot.AppState>,
+    private _store: Store<AppState>,
     private _booksService: BooksService,
   ) {
     this._books$ = this._booksService.getAllBooks();
@@ -35,7 +35,7 @@ export class BooksSearchComponent {
   }
 
   getShoppingCartItemQuantity(isbn: string): Observable<number> {
-    return this._store.select(FromRoot.getShoppingCartItemQuantity(isbn));
+    return this._store.select(FromShoppingCart.getShoppingCartItemQuantity(isbn));
   }
 
 }
