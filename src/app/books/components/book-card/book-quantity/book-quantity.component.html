@@ -1,8 +1,10 @@
 <div class="d-grid">
   <ng-container *ngIf="quantity; else noQuantityTemplate">
-    <div class="row g-0 bg-light border">
+    <div class="row g-0 bg-light border rounded">
       <button class="btn btn-primary col-3" (click)="removeFromCart.emit()">-</button>
-      <div class="col text-center">{{ quantity }}</div>
+      <div class="col text-center d-flex flex-column justify-content-center align-items-center">
+        <div>{{ quantity }}</div>
+      </div>
       <button class="btn btn-primary col-3" (click)="addToCart.emit()">+</button>
     </div>
   </ng-container>
