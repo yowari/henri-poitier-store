@@ -1,11 +1,7 @@
-<header class="page-header navbar navbar-light bg-white sticky-top border-bottom">
+<header class="navbar navbar-light bg-white sticky-top border-bottom">
   <div class="container-fluid">
-    <!-- <h1 class="page-header__title"> -->
-      <a class="navbar-brand" routerLink="/">Henri Potier Store</a>
-    <!-- </h1> -->
+    <a class="navbar-brand" routerLink="/">Henri Potier Store</a>
 
-    <!-- <div class="spacer"></div> -->
-
-    <a class="page-header__action btn btn-outline-primary" routerLink="/shopping-cart"><span *ngIf="_itemsCount$ | async as itemsCount" class="badge rounded-pill bg-primary">{{ itemsCount }}</span> Panier</a>
+    <a class="btn btn-outline-primary" routerLink="/shopping-cart"><span *ngIf="_itemsCount$ | async as itemsCount" class="badge rounded-pill bg-primary">{{ itemsCount }}</span> Panier</a>
   </div>
 </header>

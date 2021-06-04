@@ -1,12 +1,14 @@
-<div class="input-group my-4 bg-white">
+<div class="my-4">
   <input class="form-control" type="search" placeholder="Rechercher un livre..." [(ngModel)]="_searchText" />
-  <button class="btn btn-outline-secondary" type="button">Recherche</button>
 </div>
 
 <ng-container *ngIf="_books$ | async as books; else loadingTemplate">
-  <app-book-list [books]="books | searchBooks: _searchText"
-                 (addToCart)="onAddToCart($event)">
-  </app-book-list>
+  <app-book-card *ngFor="let book of books | searchBooks: _searchText"
+                 [book]="book"
+                 [quantity]="getShoppingCartItemQuantity(book.isbn) | async"
+                 (addToCart)="onAddToCart(book)"
+                 (removeFromCart)="onRemoveFromCart(book)">
+  </app-book-card>
 </ng-container>
 
 <ng-template #loadingTemplate>

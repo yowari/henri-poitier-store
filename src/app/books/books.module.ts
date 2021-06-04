@@ -3,10 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { BooksSearchComponent } from './containers/books-search/books-search.component';
-import { BookListComponent } from './components/book-list/book-list.component';
-import { BookListItemComponent } from './components/book-list/book-list-item/book-list-item.component';
+import { BookCardComponent } from './components/book-list-item/book-card.component';
 import { BooksRoutingModule } from './books-routing.module';
 import { SearchBooksPipe } from './pipes/search-books.pipe';
+import { BookQuantityComponent } from './components/book-list-item/book-quantity/book-quantity.component';
 
 @NgModule({
   imports: [
@@ -16,9 +16,9 @@ import { SearchBooksPipe } from './pipes/search-books.pipe';
   ],
   declarations: [
     BooksSearchComponent,
-    BookListComponent,
-    BookListItemComponent,
-    SearchBooksPipe
+    BookCardComponent,
+    SearchBooksPipe,
+    BookQuantityComponent
   ]
 })
 export class BooksModule { }

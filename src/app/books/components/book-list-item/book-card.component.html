@@ -1,7 +1,7 @@
 <article class="book-item card my-4">
   <div class="row g-0">
 
-    <div class="book-item__cover book-cover padding--md col-md-2 text-center">
+    <div class="book-item__cover book-cover col-md-2 text-center">
       <img [src]="book?.cover" class="book-cover__image img-fluid p-2" />
     </div>
 
@@ -14,12 +14,16 @@
       </div>
     </div>
 
-    <div class="book-item__action book-action padding--md col-md-2 border-start p-3">
+    <div class="book-item__action book-action col-md-2 border-start p-3">
       <div class="book-action__price mb-4 fs-5">
         prix: <strong>{{ book?.price | currency: 'EUR' }}</strong>
       </div>
-      <div class="book-action__add d-grid">
-        <button class="btn btn-primary" (click)="addToCart.emit(book)">Ajouter au Panier</button>
+
+      <div class="book-action__add">
+        <app-book-quantity [quantity]="quantity"
+                           (addToCart)="addToCart.emit()"
+                           (removeFromCart)="removeFromCart.emit()">
+        </app-book-quantity>
       </div>
     </div>
 

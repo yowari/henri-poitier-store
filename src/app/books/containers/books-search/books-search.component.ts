@@ -5,7 +5,8 @@ import { Observable } from 'rxjs';
 import { Book } from '../../../api/books';
 import { BooksService } from '../../../api/books.service';
 import * as FromRoot from '../../../app.state';
-import { addToCart } from '../../store/books-search.actions';
+import { addToCart, removeFromCart } from '../../store/books-search.actions';
+import { ShoppingCartItem } from '../../../shopping-cart/store/shopping-cart';
 
 @Component({
   selector: 'app-books-search',
@@ -27,6 +28,14 @@ export class BooksSearchComponent {
 
   onAddToCart(book: Book): void {
     this._store.dispatch(addToCart(book));
+  }
+
+  onRemoveFromCart(book: Book): void {
+    this._store.dispatch(removeFromCart(book));
+  }
+
+  getShoppingCartItemQuantity(isbn: string): Observable<number> {
+    return this._store.select(FromRoot.getShoppingCartItemQuantity(isbn));
   }
 
 }

@@ -1,0 +1,12 @@
+<div class="d-grid">
+  <ng-container *ngIf="quantity; else noQuantityTemplate">
+    <div class="row g-0 bg-light border">
+      <button class="btn btn-primary col-3" (click)="removeFromCart.emit()">-</button>
+      <div class="col text-center">{{ quantity }}</div>
+      <button class="btn btn-primary col-3" (click)="addToCart.emit()">+</button>
+    </div>
+  </ng-container>
+  <ng-template #noQuantityTemplate>
+    <button class="btn btn-primary" (click)="addToCart.emit()">Ajouter au Panier</button>
+  </ng-template>
+</div>

@@ -21,8 +21,6 @@ export class ShoppingCartComponent {
   _totalPrice$: Observable<number>;
   _bestOffer$: Observable<BestOffer>;
 
-  private _offers$: Observable<{ offers: Offer[] }>;
-
   constructor(
     private _store: Store<FromRoot.AppState>,
     private _shoppingCartService: ShoppingCartService,
@@ -31,20 +29,17 @@ export class ShoppingCartComponent {
     this._shoppingCartItems$ = this._store.select(FromRoot.getShoppingCartItems);
     this._totalPrice$ = this._store.select(FromRoot.getTotalPrice);
 
-    this._offers$ = this._shoppingCartItems$
+    const offers$: Observable<{ offers: Offer[] }> = this._shoppingCartItems$
       .pipe(
         switchMap(items => this._booksService.getCommercialOffers(items.map(i => i.book.isbn)))
       );
 
     this._bestOffer$ = combineLatest([
         this._totalPrice$,
-        this._offers$
+        offers$
       ])
       .pipe(
-        map(([total, { offers }]) => {
-          console.log(offers);
-          return this._shoppingCartService.getBestOffer(total, offers)
-        })
+        map(([total, { offers }]) => this._shoppingCartService.getBestOffer(total, offers))
       );
   }
 
