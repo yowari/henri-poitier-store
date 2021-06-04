@@ -6,7 +6,7 @@ import { StoreModule } from '@ngrx/store';
 import { CoreModule } from './core/core.module';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import * as fromShoppingCart from './shopping-cart/shopping-cart.reducer';
+import * as fromShoppingCart from './shopping-cart/store/shopping-cart.reducer';
 
 @NgModule({
   imports: [

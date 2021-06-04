@@ -1,0 +1,21 @@
+<div class="row my-4">
+  <div class="card col-md-8">
+    <div class="card-body">
+      <h4 class="card-title">Panier</h4>
+      <ng-container *ngIf="_shoppingCartItems$ | async as items">
+        <ng-container *ngIf="items.length > 0; else emptyCartTemplate">
+
+          <app-shopping-cart-summary [items]="items"
+                                     [total]="_totalPrice$ | async"
+                                     [bestOffer]="_bestOffer$ | async">
+          </app-shopping-cart-summary>
+
+        </ng-container>
+
+        <ng-template #emptyCartTemplate>
+          Votre panier est vide
+        </ng-template>
+      </ng-container>
+    </div>
+  </div>
+</div>

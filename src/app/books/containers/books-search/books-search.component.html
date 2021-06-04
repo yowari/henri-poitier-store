@@ -1,0 +1,18 @@
+<div class="input-group my-4 bg-white">
+  <input class="form-control" type="search" placeholder="Rechercher un livre..." [(ngModel)]="_searchText" />
+  <button class="btn btn-outline-secondary" type="button">Recherche</button>
+</div>
+
+<ng-container *ngIf="_books$ | async as books; else loadingTemplate">
+  <app-book-list [books]="books | searchBooks: _searchText"
+                 (addToCart)="onAddToCart($event)">
+  </app-book-list>
+</ng-container>
+
+<ng-template #loadingTemplate>
+  <div class="text-center">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+</ng-template>

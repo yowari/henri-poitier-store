@@ -1,0 +1,42 @@
+.book-item {
+//   display: flex;
+//   gap: 15px;
+
+  min-height: 200px;
+
+//   border: 1px solid;
+
+//   &__cover {
+//     flex: 100px 0 0;
+//   }
+
+//   &__info {
+//     flex-grow: 1;
+//   }
+
+//   &__action {
+//     flex: 100px 0 0;
+//   }
+}
+
+// .book-cover__image {
+//   width: 100%;
+//   height: auto;
+// }
+
+.book-info {
+//   display: flex;
+//   flex-flow: column;
+
+//   &__title {
+//     margin: 0;
+//   }
+
+  &__summary {
+//     height: 100%;
+//     overflow: auto;
+    text-align: justify;
+  }
+}
+
+

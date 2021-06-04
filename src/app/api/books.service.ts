@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-import { Book } from './books';
+import { Book, Offer } from './books';
 
 @Injectable({
   providedIn: 'root'
@@ -17,7 +17,7 @@ export class BooksService {
     return this._http.get<Book[]>(`${this.baseUrl}/books`);
   }
 
-  getOffers(isbn: string[]): Observable<any> {
-    return this._http.get(`${this.baseUrl}/books/${isbn.join(',')}`);
+  getCommercialOffers(isbn: string[]): Observable<{ offers: Offer[] }> {
+    return this._http.get<{ offers: Offer[] }>(`${this.baseUrl}/books/${isbn.join(',')}/commercialOffers`);
   }
 }
