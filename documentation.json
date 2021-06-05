@@ -2,7 +2,7 @@
     "pipes": [
         {
             "name": "SearchBooksPipe",
-            "id": "pipe-SearchBooksPipe-4fe5603bb37165340748ead95aa59cc3",
+            "id": "pipe-SearchBooksPipe-13f8a16425f8bf6270f1facc47db148a",
             "file": "src/app/books/pipes/search-books.pipe.ts",
             "type": "pipe",
             "description": "",
@@ -44,23 +44,23 @@
             ],
             "pure": true,
             "ngname": "searchBooks",
-            "sourceCode": "import { Pipe, PipeTransform } from '@angular/core';\n\nimport { Book } from '../../api/books';\n\n@Pipe({\n  name: 'searchBooks',\n  pure: true\n})\nexport class SearchBooksPipe implements PipeTransform {\n\n  transform(books: Book[], searchText: string): Book[] {\n    const lowerSearchText = searchText.toLocaleLowerCase();\n    return books.filter(book => book.title.toLocaleLowerCase().includes(lowerSearchText) || book.synopsis.some(s => s.toLocaleLowerCase().includes(lowerSearchText)));\n  }\n\n}\n"
+            "sourceCode": "import { Pipe, PipeTransform } from '@angular/core';\n\nimport { Book } from '../models/books';\n\n@Pipe({\n  name: 'searchBooks',\n  pure: true\n})\nexport class SearchBooksPipe implements PipeTransform {\n\n  transform(books: Book[], searchText: string): Book[] {\n    const lowerSearchText = searchText.toLocaleLowerCase();\n    return books.filter(book => book.title.toLocaleLowerCase().includes(lowerSearchText) || book.synopsis.some(s => s.toLocaleLowerCase().includes(lowerSearchText)));\n  }\n\n}\n"
         }
     ],
     "interfaces": [
         {
             "name": "AppState",
-            "id": "interface-AppState-99aa802931915cd0ee6e5efb00637cc3",
+            "id": "interface-AppState-bd7927d133544eec6f9d919ceefa8574",
             "file": "src/app/app.state.ts",
             "type": "interface",
-            "sourceCode": "import { createSelector } from '@ngrx/store';\nimport { ShoppingCartItem } from './shopping-cart/store/shopping-cart';\nimport { ShoppingCartState } from './shopping-cart/store/shopping-cart.reducer';\n\nexport interface AppState {\n  shoppingCart: ShoppingCartState\n}\n\nexport const getShoppingCartState = (state: AppState) => state.shoppingCart;\n\nexport const getShoppingCartItems = createSelector(\n  getShoppingCartState,\n  (shoppingCartState: ShoppingCartState) => shoppingCartState.items\n);\n\nexport const getTotalPrice = createSelector(\n  getShoppingCartItems,\n  (items: ShoppingCartItem[]) => items.reduce((acc, item) => acc + (item.quantity * item.book.price), 0)\n);\n\nexport const getShoppingCartItemsCount = createSelector(\n  getShoppingCartState,\n  (shoppingCartState: ShoppingCartState) => {\n    return shoppingCartState.items.reduce((acc, item) => acc + item.quantity, 0);\n  }\n);\n\nexport const getShoppingCartItemQuantity = (isbn: string) => {\n  return createSelector(\n    getShoppingCartState,\n    (shoppingCartState: ShoppingCartState) => {\n      const item = shoppingCartState.items.find(i => i.book.isbn === isbn);\n\n      if (item) {\n        return item.quantity;\n      } else {\n        return 0;\n      }\n    }\n  );\n};\n",
+            "sourceCode": "import { ShoppingCartState } from './shopping-cart/store/shopping-cart.state';\n\nexport interface AppState {\n  shoppingCart: ShoppingCartState\n}\n",
             "properties": [
                 {
                     "name": "shoppingCart",
                     "type": "ShoppingCartState",
                     "optional": false,
                     "description": "",
-                    "line": 6
+                    "line": 4
                 }
             ],
             "indexSignatures": [],
@@ -69,24 +69,24 @@
         },
         {
             "name": "BestOffer",
-            "id": "interface-BestOffer-31eea59e66f995c9ce265c44819467b6",
-            "file": "src/app/shopping-cart/services/shopping-cart.service.ts",
+            "id": "interface-BestOffer-37ace6881afccb46f9ca8520c229f17e",
+            "file": "src/app/shopping-cart/models/commercial-offers.ts",
             "type": "interface",
-            "sourceCode": "import { Injectable } from '@angular/core';\n\nimport { Offer } from '../../api/books';\n\nexport interface BestOffer {\n  offer: Offer;\n  discount: number;\n}\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class ShoppingCartService {\n\n  constructor() { }\n\n  getBestOffer(total: number, offers: Offer[]): BestOffer {\n    const discounts = offers.map(offer => this.getDiscount(total, offer));\n    let minimalPriceIndex = 0;\n\n    for (let i = 0; i < discounts.length; i++) {\n      if (discounts[i] > discounts[minimalPriceIndex]) {\n        minimalPriceIndex = i;\n      }\n    }\n\n    return {\n      offer: offers[minimalPriceIndex],\n      discount: discounts[minimalPriceIndex]\n    };\n  }\n\n  getDiscount(total: number, offer: Offer): number {\n    switch (offer.type) {\n      case 'minus':\n        return offer.value;\n      case 'percentage':\n        return total * (offer.value / 100);\n      case 'slice':\n          return Math.floor(total / offer.sliceValue) * offer.value;\n      default:\n        throw new Error('Unrecognized offer type');\n    }\n  }\n\n  // applyOffer(total: number, offer: Offer): number {\n  //   switch (offer.type) {\n  //     case 'minus':\n  //       return total - offer.value;\n  //     case 'percentage':\n  //       return total - (total * (offer.value / 100));\n  //     case 'slice':\n  //         return total - (Math.floor(total / offer.sliceValue) * offer.value);\n  //     default:\n  //       return total;\n  //   }\n  // }\n}\n",
+            "sourceCode": "export interface CommercialOffers {\n  offers: Offer[];\n}\n\nexport type Offer = PercentageOffer | MinusOffer | SliceOffer;\n\nexport interface PercentageOffer {\n  type: 'percentage';\n  value: number;\n}\n\nexport interface MinusOffer {\n  type: 'minus';\n  value: number;\n}\n\nexport interface SliceOffer {\n  type: 'slice';\n  value: number;\n  sliceValue: number;\n}\n\nexport interface BestOffer {\n  offer: Offer;\n  discount: number;\n}\n",
             "properties": [
                 {
                     "name": "discount",
                     "type": "number",
                     "optional": false,
                     "description": "",
-                    "line": 7
+                    "line": 25
                 },
                 {
                     "name": "offer",
                     "type": "Offer",
                     "optional": false,
                     "description": "",
-                    "line": 6
+                    "line": 24
                 }
             ],
             "indexSignatures": [],
@@ -95,10 +95,10 @@
         },
         {
             "name": "Book",
-            "id": "interface-Book-d1ff7ccaf7a1089957eca8e3c0ed88c7",
-            "file": "src/app/api/books.ts",
+            "id": "interface-Book-a44665579e1e2a9255b78a48d29a707d",
+            "file": "src/app/books/models/books.ts",
             "type": "interface",
-            "sourceCode": "export interface Book {\n  isbn: string;\n  title: string;\n  price: number;\n  cover: string;\n  synopsis: string[];\n}\n\nexport interface CommercialOffers {\n  offers: Offer[];\n}\n\nexport type Offer = PercentageOffer | MinusOffer | SliceOffer;\n\nexport interface PercentageOffer {\n  type: 'percentage';\n  value: number;\n}\n\nexport interface MinusOffer {\n  type: 'minus';\n  value: number;\n}\n\nexport interface SliceOffer {\n  type: 'slice';\n  value: number;\n  sliceValue: number;\n}\n",
+            "sourceCode": "export interface Book {\n  isbn: string;\n  title: string;\n  price: number;\n  cover: string;\n  synopsis: string[];\n}\n",
             "properties": [
                 {
                     "name": "cover",
@@ -142,17 +142,17 @@
         },
         {
             "name": "CommercialOffers",
-            "id": "interface-CommercialOffers-d1ff7ccaf7a1089957eca8e3c0ed88c7",
-            "file": "src/app/api/books.ts",
+            "id": "interface-CommercialOffers-37ace6881afccb46f9ca8520c229f17e",
+            "file": "src/app/shopping-cart/models/commercial-offers.ts",
             "type": "interface",
-            "sourceCode": "export interface Book {\n  isbn: string;\n  title: string;\n  price: number;\n  cover: string;\n  synopsis: string[];\n}\n\nexport interface CommercialOffers {\n  offers: Offer[];\n}\n\nexport type Offer = PercentageOffer | MinusOffer | SliceOffer;\n\nexport interface PercentageOffer {\n  type: 'percentage';\n  value: number;\n}\n\nexport interface MinusOffer {\n  type: 'minus';\n  value: number;\n}\n\nexport interface SliceOffer {\n  type: 'slice';\n  value: number;\n  sliceValue: number;\n}\n",
+            "sourceCode": "export interface CommercialOffers {\n  offers: Offer[];\n}\n\nexport type Offer = PercentageOffer | MinusOffer | SliceOffer;\n\nexport interface PercentageOffer {\n  type: 'percentage';\n  value: number;\n}\n\nexport interface MinusOffer {\n  type: 'minus';\n  value: number;\n}\n\nexport interface SliceOffer {\n  type: 'slice';\n  value: number;\n  sliceValue: number;\n}\n\nexport interface BestOffer {\n  offer: Offer;\n  discount: number;\n}\n",
             "properties": [
                 {
                     "name": "offers",
                     "type": "Offer[]",
                     "optional": false,
                     "description": "",
-                    "line": 10
+                    "line": 2
                 }
             ],
             "indexSignatures": [],
@@ -161,24 +161,24 @@
         },
         {
             "name": "MinusOffer",
-            "id": "interface-MinusOffer-d1ff7ccaf7a1089957eca8e3c0ed88c7",
-            "file": "src/app/api/books.ts",
+            "id": "interface-MinusOffer-37ace6881afccb46f9ca8520c229f17e",
+            "file": "src/app/shopping-cart/models/commercial-offers.ts",
             "type": "interface",
-            "sourceCode": "export interface Book {\n  isbn: string;\n  title: string;\n  price: number;\n  cover: string;\n  synopsis: string[];\n}\n\nexport interface CommercialOffers {\n  offers: Offer[];\n}\n\nexport type Offer = PercentageOffer | MinusOffer | SliceOffer;\n\nexport interface PercentageOffer {\n  type: 'percentage';\n  value: number;\n}\n\nexport interface MinusOffer {\n  type: 'minus';\n  value: number;\n}\n\nexport interface SliceOffer {\n  type: 'slice';\n  value: number;\n  sliceValue: number;\n}\n",
+            "sourceCode": "export interface CommercialOffers {\n  offers: Offer[];\n}\n\nexport type Offer = PercentageOffer | MinusOffer | SliceOffer;\n\nexport interface PercentageOffer {\n  type: 'percentage';\n  value: number;\n}\n\nexport interface MinusOffer {\n  type: 'minus';\n  value: number;\n}\n\nexport interface SliceOffer {\n  type: 'slice';\n  value: number;\n  sliceValue: number;\n}\n\nexport interface BestOffer {\n  offer: Offer;\n  discount: number;\n}\n",
             "properties": [
                 {
                     "name": "type",
                     "type": "",
                     "optional": false,
                     "description": "",
-                    "line": 21
+                    "line": 13
                 },
                 {
                     "name": "value",
                     "type": "number",
                     "optional": false,
                     "description": "",
-                    "line": 22
+                    "line": 14
                 }
             ],
             "indexSignatures": [],
@@ -187,24 +187,24 @@
         },
         {
             "name": "PercentageOffer",
-            "id": "interface-PercentageOffer-d1ff7ccaf7a1089957eca8e3c0ed88c7",
-            "file": "src/app/api/books.ts",
+            "id": "interface-PercentageOffer-37ace6881afccb46f9ca8520c229f17e",
+            "file": "src/app/shopping-cart/models/commercial-offers.ts",
             "type": "interface",
-            "sourceCode": "export interface Book {\n  isbn: string;\n  title: string;\n  price: number;\n  cover: string;\n  synopsis: string[];\n}\n\nexport interface CommercialOffers {\n  offers: Offer[];\n}\n\nexport type Offer = PercentageOffer | MinusOffer | SliceOffer;\n\nexport interface PercentageOffer {\n  type: 'percentage';\n  value: number;\n}\n\nexport interface MinusOffer {\n  type: 'minus';\n  value: number;\n}\n\nexport interface SliceOffer {\n  type: 'slice';\n  value: number;\n  sliceValue: number;\n}\n",
+            "sourceCode": "export interface CommercialOffers {\n  offers: Offer[];\n}\n\nexport type Offer = PercentageOffer | MinusOffer | SliceOffer;\n\nexport interface PercentageOffer {\n  type: 'percentage';\n  value: number;\n}\n\nexport interface MinusOffer {\n  type: 'minus';\n  value: number;\n}\n\nexport interface SliceOffer {\n  type: 'slice';\n  value: number;\n  sliceValue: number;\n}\n\nexport interface BestOffer {\n  offer: Offer;\n  discount: number;\n}\n",
             "properties": [
                 {
                     "name": "type",
                     "type": "",
                     "optional": false,
                     "description": "",
-                    "line": 16
+                    "line": 8
                 },
                 {
                     "name": "value",
                     "type": "number",
                     "optional": false,
                     "description": "",
-                    "line": 17
+                    "line": 9
                 }
             ],
             "indexSignatures": [],
@@ -213,10 +213,10 @@
         },
         {
             "name": "ShoppingCartItem",
-            "id": "interface-ShoppingCartItem-bbc3f1278c6ff612c6b41ad4ecc18085",
-            "file": "src/app/shopping-cart/store/shopping-cart.ts",
+            "id": "interface-ShoppingCartItem-f66cccf8a06468a87d5b8d04c35184d8",
+            "file": "src/app/shopping-cart/models/shopping-cart.ts",
             "type": "interface",
-            "sourceCode": "import { Book } from '../../api/books';\n\nexport interface ShoppingCartItem {\n  quantity: number;\n  book: Book;\n}\n",
+            "sourceCode": "import { Book } from '../../books/models/books';\n\nexport interface ShoppingCartItem {\n  quantity: number;\n  book: Book;\n}\n",
             "properties": [
                 {
                     "name": "book",
@@ -239,17 +239,17 @@
         },
         {
             "name": "ShoppingCartState",
-            "id": "interface-ShoppingCartState-4b52e25cfad9d39b05091f3d26db6a1f",
-            "file": "src/app/shopping-cart/store/shopping-cart.reducer.ts",
+            "id": "interface-ShoppingCartState-c05e9b7d9934a0929133a337daedb2a7",
+            "file": "src/app/shopping-cart/store/shopping-cart.state.ts",
             "type": "interface",
-            "sourceCode": "import { Action, createReducer, on } from '@ngrx/store';\n\nimport * as BooksSearchPageActions from '../../books/store/books-search.actions';\nimport { ShoppingCartItem } from './shopping-cart';\n\nexport interface ShoppingCartState {\n  items: ShoppingCartItem[]\n}\n\nexport const initialState: ShoppingCartState = {\n  items: []\n}\n\nexport const shoppingCartReducer = createReducer(\n  initialState,\n  on(BooksSearchPageActions.addToCart, (state, book) => {\n    const index = state.items.findIndex(item => item.book.isbn === book.isbn);\n\n    if (index >= 0) {\n      return {\n        ...state,\n        items: [\n          ...state.items.slice(0, index),\n          {\n            book,\n            quantity: state.items[index].quantity + 1\n          },\n          ...state.items.slice(index + 1)\n        ]\n      };\n    } else {\n      return {\n        ...state,\n        items: [\n          ...state.items,\n          {\n            book,\n            quantity: 1\n          }\n        ]\n      };\n    }\n  }),\n  on(BooksSearchPageActions.removeFromCart, (state, book) => {\n    const index = state.items.findIndex(item => item.book.isbn === book.isbn);\n\n    if (index >= 0) {\n      if (state.items[index].quantity - 1 === 0) {\n        return {\n          ...state,\n          items: [\n            ...state.items.slice(0, index),\n            ...state.items.slice(index + 1)\n          ]\n        };\n      } else {\n        return {\n          ...state,\n          items: [\n            ...state.items.slice(0, index),\n            {\n              book,\n              quantity: state.items[index].quantity - 1\n            },\n            ...state.items.slice(index + 1)\n          ]\n        };\n      }\n    } else {\n      return state;\n    }\n  })\n);\n\nexport function reducer(state: ShoppingCartState | undefined, action: Action) {\n  return shoppingCartReducer(state, action);\n}\n",
+            "sourceCode": "import { ShoppingCartItem } from '../models/shopping-cart';\n\nexport interface ShoppingCartState {\n  items: ShoppingCartItem[]\n}\n\nexport const initialState: ShoppingCartState = {\n  items: []\n}\n",
             "properties": [
                 {
                     "name": "items",
                     "type": "ShoppingCartItem[]",
                     "optional": false,
                     "description": "",
-                    "line": 7
+                    "line": 4
                 }
             ],
             "indexSignatures": [],
@@ -258,31 +258,31 @@
         },
         {
             "name": "SliceOffer",
-            "id": "interface-SliceOffer-d1ff7ccaf7a1089957eca8e3c0ed88c7",
-            "file": "src/app/api/books.ts",
+            "id": "interface-SliceOffer-37ace6881afccb46f9ca8520c229f17e",
+            "file": "src/app/shopping-cart/models/commercial-offers.ts",
             "type": "interface",
-            "sourceCode": "export interface Book {\n  isbn: string;\n  title: string;\n  price: number;\n  cover: string;\n  synopsis: string[];\n}\n\nexport interface CommercialOffers {\n  offers: Offer[];\n}\n\nexport type Offer = PercentageOffer | MinusOffer | SliceOffer;\n\nexport interface PercentageOffer {\n  type: 'percentage';\n  value: number;\n}\n\nexport interface MinusOffer {\n  type: 'minus';\n  value: number;\n}\n\nexport interface SliceOffer {\n  type: 'slice';\n  value: number;\n  sliceValue: number;\n}\n",
+            "sourceCode": "export interface CommercialOffers {\n  offers: Offer[];\n}\n\nexport type Offer = PercentageOffer | MinusOffer | SliceOffer;\n\nexport interface PercentageOffer {\n  type: 'percentage';\n  value: number;\n}\n\nexport interface MinusOffer {\n  type: 'minus';\n  value: number;\n}\n\nexport interface SliceOffer {\n  type: 'slice';\n  value: number;\n  sliceValue: number;\n}\n\nexport interface BestOffer {\n  offer: Offer;\n  discount: number;\n}\n",
             "properties": [
                 {
                     "name": "sliceValue",
                     "type": "number",
                     "optional": false,
                     "description": "",
-                    "line": 28
+                    "line": 20
                 },
                 {
                     "name": "type",
                     "type": "",
                     "optional": false,
                     "description": "",
-                    "line": 26
+                    "line": 18
                 },
                 {
                     "name": "value",
                     "type": "number",
                     "optional": false,
                     "description": "",
-                    "line": 27
+                    "line": 19
                 }
             ],
             "indexSignatures": [],
@@ -293,8 +293,56 @@
     "injectables": [
         {
             "name": "BooksService",
-            "id": "injectable-BooksService-64bc6d88dddfb86d537ed20ff188c035",
-            "file": "src/app/api/books.service.ts",
+            "id": "injectable-BooksService-30c9ee0bb65d4bfe5494866ef93619a7",
+            "file": "src/app/books/services/books.service.ts",
+            "properties": [
+                {
+                    "name": "baseUrl",
+                    "defaultValue": "'https://henri-potier.techx.fr'",
+                    "type": "string",
+                    "optional": false,
+                    "description": "",
+                    "line": 13
+                }
+            ],
+            "methods": [
+                {
+                    "name": "getAllBooks",
+                    "args": [],
+                    "optional": false,
+                    "returnType": "Observable<Book[]>",
+                    "typeParameters": [],
+                    "line": 17
+                }
+            ],
+            "description": "",
+            "sourceCode": "import { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\nimport { Observable } from 'rxjs';\n\nimport { Book } from '../models/books';\nimport { CommercialOffers } from '../../shopping-cart/models/commercial-offers';\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class BooksService {\n\n  baseUrl = 'https://henri-potier.techx.fr';\n\n  constructor(private _http: HttpClient) { }\n\n  getAllBooks(): Observable<Book[]> {\n    return this._http.get<Book[]>(`${this.baseUrl}/books`);\n  }\n\n}\n",
+            "constructorObj": {
+                "name": "constructor",
+                "description": "",
+                "args": [
+                    {
+                        "name": "_http",
+                        "type": "HttpClient"
+                    }
+                ],
+                "line": 13,
+                "jsdoctags": [
+                    {
+                        "name": "_http",
+                        "type": "HttpClient",
+                        "tagName": {
+                            "text": "param"
+                        }
+                    }
+                ]
+            },
+            "type": "injectable"
+        },
+        {
+            "name": "CommercialOffersService",
+            "id": "injectable-CommercialOffersService-820e534b8a25c5742a3920ea4a27ba93",
+            "file": "src/app/shopping-cart/services/commercial-offers.service.ts",
             "properties": [
                 {
                     "name": "baseUrl",
@@ -307,14 +355,6 @@
             ],
             "methods": [
                 {
-                    "name": "getAllBooks",
-                    "args": [],
-                    "optional": false,
-                    "returnType": "Observable<Book[]>",
-                    "typeParameters": [],
-                    "line": 16
-                },
-                {
                     "name": "getCommercialOffers",
                     "args": [
                         {
@@ -325,7 +365,7 @@
                     "optional": false,
                     "returnType": "Observable<CommercialOffers>",
                     "typeParameters": [],
-                    "line": 20,
+                    "line": 16,
                     "jsdoctags": [
                         {
                             "name": "isbn",
@@ -338,7 +378,7 @@
                 }
             ],
             "description": "",
-            "sourceCode": "import { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\nimport { Observable } from 'rxjs';\n\nimport { Book, CommercialOffers, Offer } from './books';\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class BooksService {\n\n  baseUrl = 'https://henri-potier.techx.fr';\n\n  constructor(private _http: HttpClient) { }\n\n  getAllBooks(): Observable<Book[]> {\n    return this._http.get<Book[]>(`${this.baseUrl}/books`);\n  }\n\n  getCommercialOffers(isbn: string[]): Observable<CommercialOffers> {\n    return this._http.get<CommercialOffers>(`${this.baseUrl}/books/${isbn.join(',')}/commercialOffers`);\n  }\n}\n",
+            "sourceCode": "import { HttpClient } from '@angular/common/http';\nimport { Injectable } from '@angular/core';\nimport { Observable } from 'rxjs';\n\nimport { CommercialOffers } from '../models/commercial-offers';\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class CommercialOffersService {\n\n  baseUrl = 'https://henri-potier.techx.fr';\n\n  constructor(private _http: HttpClient) { }\n\n  getCommercialOffers(isbn: string[]): Observable<CommercialOffers> {\n    return this._http.get<CommercialOffers>(`${this.baseUrl}/books/${isbn.join(',')}/commercialOffers`);\n  }\n}\n",
             "constructorObj": {
                 "name": "constructor",
                 "description": "",
@@ -363,7 +403,7 @@
         },
         {
             "name": "ShoppingCartService",
-            "id": "injectable-ShoppingCartService-31eea59e66f995c9ce265c44819467b6",
+            "id": "injectable-ShoppingCartService-1e29eafbb70882d0a38bed14a8807b0e",
             "file": "src/app/shopping-cart/services/shopping-cart.service.ts",
             "properties": [],
             "methods": [
@@ -382,7 +422,7 @@
                     "optional": false,
                     "returnType": "BestOffer",
                     "typeParameters": [],
-                    "line": 17,
+                    "line": 10,
                     "jsdoctags": [
                         {
                             "name": "total",
@@ -415,7 +455,7 @@
                     "optional": false,
                     "returnType": "number",
                     "typeParameters": [],
-                    "line": 33,
+                    "line": 26,
                     "jsdoctags": [
                         {
                             "name": "total",
@@ -435,13 +475,7 @@
                 }
             ],
             "description": "",
-            "sourceCode": "import { Injectable } from '@angular/core';\n\nimport { Offer } from '../../api/books';\n\nexport interface BestOffer {\n  offer: Offer;\n  discount: number;\n}\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class ShoppingCartService {\n\n  constructor() { }\n\n  getBestOffer(total: number, offers: Offer[]): BestOffer {\n    const discounts = offers.map(offer => this.getDiscount(total, offer));\n    let minimalPriceIndex = 0;\n\n    for (let i = 0; i < discounts.length; i++) {\n      if (discounts[i] > discounts[minimalPriceIndex]) {\n        minimalPriceIndex = i;\n      }\n    }\n\n    return {\n      offer: offers[minimalPriceIndex],\n      discount: discounts[minimalPriceIndex]\n    };\n  }\n\n  getDiscount(total: number, offer: Offer): number {\n    switch (offer.type) {\n      case 'minus':\n        return offer.value;\n      case 'percentage':\n        return total * (offer.value / 100);\n      case 'slice':\n          return Math.floor(total / offer.sliceValue) * offer.value;\n      default:\n        throw new Error('Unrecognized offer type');\n    }\n  }\n\n  // applyOffer(total: number, offer: Offer): number {\n  //   switch (offer.type) {\n  //     case 'minus':\n  //       return total - offer.value;\n  //     case 'percentage':\n  //       return total - (total * (offer.value / 100));\n  //     case 'slice':\n  //         return total - (Math.floor(total / offer.sliceValue) * offer.value);\n  //     default:\n  //       return total;\n  //   }\n  // }\n}\n",
-            "constructorObj": {
-                "name": "constructor",
-                "description": "",
-                "args": [],
-                "line": 13
-            },
+            "sourceCode": "import { Injectable } from '@angular/core';\n\nimport { BestOffer, Offer } from '../models/commercial-offers';\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class ShoppingCartService {\n\n  getBestOffer(total: number, offers: Offer[]): BestOffer {\n    const discounts = offers.map(offer => this.getDiscount(total, offer));\n    let minimalPriceIndex = 0;\n\n    for (let i = 0; i < discounts.length; i++) {\n      if (discounts[i] > discounts[minimalPriceIndex]) {\n        minimalPriceIndex = i;\n      }\n    }\n\n    return {\n      offer: offers[minimalPriceIndex],\n      discount: discounts[minimalPriceIndex]\n    };\n  }\n\n  getDiscount(total: number, offer: Offer): number {\n    switch (offer.type) {\n      case 'minus':\n        return offer.value;\n      case 'percentage':\n        return total * (offer.value / 100);\n      case 'slice':\n          return Math.floor(total / offer.sliceValue) * offer.value;\n      default:\n        throw new Error('Unrecognized offer type');\n    }\n  }\n\n}\n",
             "type": "injectable"
         }
     ],
@@ -450,7 +484,7 @@
     "components": [
         {
             "name": "AppComponent",
-            "id": "component-AppComponent-33fad59fedf960701c517ebd929ccb4c",
+            "id": "component-AppComponent-405615c5284f58a1a6bf798424f1b804",
             "file": "src/app/app.component.ts",
             "changeDetection": "ChangeDetectionStrategy.OnPush",
             "encapsulation": [],
@@ -469,14 +503,22 @@
             "viewProviders": [],
             "inputsClass": [],
             "outputsClass": [],
-            "propertiesClass": [],
+            "propertiesClass": [
+                {
+                    "name": "_itemsCount$",
+                    "type": "Observable<number>",
+                    "optional": false,
+                    "description": "",
+                    "line": 16
+                }
+            ],
             "methodsClass": [],
             "hostBindings": [],
             "hostListeners": [],
             "description": "",
             "rawdescription": "",
             "type": "component",
-            "sourceCode": "import { ChangeDetectionStrategy, Component } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  templateUrl: './app.component.html',\n  styleUrls: ['./app.component.scss'],\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class AppComponent {\n}\n",
+            "sourceCode": "import { ChangeDetectionStrategy, Component } from '@angular/core';\nimport { Store } from '@ngrx/store';\nimport { Observable } from 'rxjs';\n\nimport { AppState } from './app.state';\nimport * as FromShoppingCart from './shopping-cart/store/shopping-cart.selectors';\n\n@Component({\n  selector: 'app-root',\n  templateUrl: './app.component.html',\n  styleUrls: ['./app.component.scss'],\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class AppComponent {\n\n  _itemsCount$: Observable<number>;\n\n  constructor(private _store: Store<AppState>) {\n    this._itemsCount$ = this._store.select(FromShoppingCart.getShoppingCartItemsCount);\n  }\n\n}\n",
             "assetsDirs": [],
             "styleUrlsData": [
                 {
@@ -485,11 +527,31 @@
                 }
             ],
             "stylesData": "",
-            "templateData": "<app-header></app-header>\n\n<main class=\"container\">\n  <router-outlet></router-outlet>\n</main>\n"
+            "constructorObj": {
+                "name": "constructor",
+                "description": "",
+                "args": [
+                    {
+                        "name": "_store",
+                        "type": "Store<AppState>"
+                    }
+                ],
+                "line": 16,
+                "jsdoctags": [
+                    {
+                        "name": "_store",
+                        "type": "Store<AppState>",
+                        "tagName": {
+                            "text": "param"
+                        }
+                    }
+                ]
+            },
+            "templateData": "<app-header [itemsCount]=\"_itemsCount$ | async\"></app-header>\n\n<main class=\"container\">\n  <router-outlet></router-outlet>\n</main>\n"
         },
         {
             "name": "BookCardComponent",
-            "id": "component-BookCardComponent-c4aabb4190084e00cbb746379215f677",
+            "id": "component-BookCardComponent-a5fe3b0068e338c9ebd05f0dc6e2bf59",
             "file": "src/app/books/components/book-card/book-card.component.ts",
             "changeDetection": "ChangeDetectionStrategy.OnPush",
             "encapsulation": [],
@@ -540,20 +602,20 @@
             "description": "",
             "rawdescription": "",
             "type": "component",
-            "sourceCode": "import {\n  ChangeDetectionStrategy,\n  Component,\n  EventEmitter,\n  Input,\n  Output\n} from '@angular/core';\n\nimport { Book } from '../../../api/books';\n\n@Component({\n  selector: 'app-book-card',\n  templateUrl: './book-card.component.html',\n  styleUrls: ['./book-card.component.scss'],\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class BookCardComponent {\n\n  @Input()\n  book?: Book;\n\n  @Input()\n  quantity: number | null = 0;\n\n  @Output()\n  addToCart: EventEmitter<void> = new EventEmitter();\n\n  @Output()\n  removeFromCart: EventEmitter<void> = new EventEmitter();\n\n}\n",
+            "sourceCode": "import {\n  ChangeDetectionStrategy,\n  Component,\n  EventEmitter,\n  Input,\n  Output\n} from '@angular/core';\n\nimport { Book } from '../../models/books';\n\n@Component({\n  selector: 'app-book-card',\n  templateUrl: './book-card.component.html',\n  styleUrls: ['./book-card.component.scss'],\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class BookCardComponent {\n\n  @Input()\n  book?: Book;\n\n  @Input()\n  quantity: number | null = 0;\n\n  @Output()\n  addToCart: EventEmitter<void> = new EventEmitter();\n\n  @Output()\n  removeFromCart: EventEmitter<void> = new EventEmitter();\n\n}\n",
             "assetsDirs": [],
             "styleUrlsData": [
                 {
-                    "data": ".book-item {\n//   display: flex;\n//   gap: 15px;\n\n  min-height: 200px;\n\n//   border: 1px solid;\n\n//   &__cover {\n//     flex: 100px 0 0;\n//   }\n\n//   &__info {\n//     flex-grow: 1;\n//   }\n\n//   &__action {\n//     flex: 100px 0 0;\n//   }\n}\n\n// .book-cover__image {\n//   width: 100%;\n//   height: auto;\n// }\n\n.book-info {\n//   display: flex;\n//   flex-flow: column;\n\n//   &__title {\n//     margin: 0;\n//   }\n\n  &__summary {\n//     height: 100%;\n//     overflow: auto;\n    text-align: justify;\n  }\n}\n\n\n",
+                    "data": ".book-item {\n//   display: flex;\n//   gap: 15px;\n\n  min-height: 200px;\n\n//   border: 1px solid;\n\n//   &__cover {\n//     flex: 100px 0 0;\n//   }\n\n//   &__info {\n//     flex-grow: 1;\n//   }\n\n//   &__action {\n//     // flex: 100px 0 0;\n//     @extend .border-top;\n//   }\n}\n\n// @media (min-width: 768px) {\n//   .book-item__action {\n//     @extend .border-top-0;\n//     @extend .border-start;\n//   }\n// }\n\n// .book-cover__image {\n//   width: 100%;\n//   height: auto;\n// }\n\n.book-info {\n//   display: flex;\n//   flex-flow: column;\n\n//   &__title {\n//     margin: 0;\n//   }\n\n  &__summary {\n//     height: 100%;\n//     overflow: auto;\n    text-align: justify;\n  }\n}\n\n\n",
                     "styleUrl": "./book-card.component.scss"
                 }
             ],
             "stylesData": "",
-            "templateData": "<article class=\"book-item card my-4\">\n  <div class=\"row g-0\">\n\n    <div class=\"book-item__cover book-cover col-md-2 text-center\">\n      <img [src]=\"book?.cover\" class=\"book-cover__image img-fluid p-2\" />\n    </div>\n\n    <div class=\"book-item__info book-info card-body col-md-8\">\n      <h5 class=\"book-info__title card-title\">{{ book?.title }}</h5>\n      <div class=\"book-info__summary overflow-auto\">\n        <p *ngFor=\"let synopsisParagraph of book?.synopsis\" class=\"card-text\">\n          {{ synopsisParagraph }}\n        </p>\n      </div>\n    </div>\n\n    <div class=\"book-item__action book-action col-md-2 border-start p-3\">\n      <div class=\"book-action__price mb-4 fs-5\">\n        prix: <strong>{{ book?.price | currency: 'EUR' }}</strong>\n      </div>\n\n      <div class=\"book-action__add\">\n        <app-book-quantity [quantity]=\"quantity\"\n                           (addToCart)=\"addToCart.emit()\"\n                           (removeFromCart)=\"removeFromCart.emit()\">\n        </app-book-quantity>\n      </div>\n    </div>\n\n  </div>\n</article>\n"
+            "templateData": "<article class=\"book-item card my-4\">\n  <div class=\"row g-0\">\n\n    <div class=\"book-item__cover book-cover col-md-2 text-center\">\n      <img [src]=\"book?.cover\" class=\"book-cover__image img-fluid p-2\" />\n    </div>\n\n    <div class=\"book-item__info book-info card-body col-md-8\">\n      <h5 class=\"book-info__title card-title\">{{ book?.title }}</h5>\n      <div class=\"book-info__summary overflow-auto\">\n        <p *ngFor=\"let synopsisParagraph of book?.synopsis\" class=\"card-text\">\n          {{ synopsisParagraph }}\n        </p>\n      </div>\n    </div>\n\n    <div class=\"book-item__action book-action col-md-2 p-3\">\n      <div class=\"book-action__price mb-4 fs-5\">\n        prix: <strong>{{ book?.price | currency: 'EUR' }}</strong>\n      </div>\n\n      <div class=\"book-action__add\">\n        <app-book-quantity [quantity]=\"quantity\"\n                           (addToCart)=\"addToCart.emit()\"\n                           (removeFromCart)=\"removeFromCart.emit()\">\n        </app-book-quantity>\n      </div>\n    </div>\n\n  </div>\n</article>\n"
         },
         {
             "name": "BookQuantityComponent",
-            "id": "component-BookQuantityComponent-c7e3dccf0cd090a6e5bb97efe55e78b1",
+            "id": "component-BookQuantityComponent-380799c69559c653a75c069e246a277a",
             "file": "src/app/books/components/book-card/book-quantity/book-quantity.component.ts",
             "changeDetection": "ChangeDetectionStrategy.OnPush",
             "encapsulation": [],
@@ -599,7 +661,7 @@
             "description": "",
             "rawdescription": "",
             "type": "component",
-            "sourceCode": "import {\n  ChangeDetectionStrategy,\n  Component,\n  EventEmitter,\n  Input,\n  Output\n} from '@angular/core';\n\nimport { Book } from '../../../../api/books';\n\n@Component({\n  selector: 'app-book-quantity',\n  templateUrl: './book-quantity.component.html',\n  styleUrls: ['./book-quantity.component.scss'],\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class BookQuantityComponent {\n\n  @Input()\n  quantity: number | null = 0;\n\n  @Output()\n  addToCart: EventEmitter<void> = new EventEmitter();\n\n  @Output()\n  removeFromCart: EventEmitter<void> = new EventEmitter();\n\n}\n",
+            "sourceCode": "import {\n  ChangeDetectionStrategy,\n  Component,\n  EventEmitter,\n  Input,\n  Output\n} from '@angular/core';\n\nimport { Book } from '../../../models/books';\n\n@Component({\n  selector: 'app-book-quantity',\n  templateUrl: './book-quantity.component.html',\n  styleUrls: ['./book-quantity.component.scss'],\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class BookQuantityComponent {\n\n  @Input()\n  quantity: number | null = 0;\n\n  @Output()\n  addToCart: EventEmitter<void> = new EventEmitter();\n\n  @Output()\n  removeFromCart: EventEmitter<void> = new EventEmitter();\n\n}\n",
             "assetsDirs": [],
             "styleUrlsData": [
                 {
@@ -608,11 +670,11 @@
                 }
             ],
             "stylesData": "",
-            "templateData": "<div class=\"d-grid\">\n  <ng-container *ngIf=\"quantity; else noQuantityTemplate\">\n    <div class=\"row g-0 bg-light border\">\n      <button class=\"btn btn-primary col-3\" (click)=\"removeFromCart.emit()\">-</button>\n      <div class=\"col text-center\">{{ quantity }}</div>\n      <button class=\"btn btn-primary col-3\" (click)=\"addToCart.emit()\">+</button>\n    </div>\n  </ng-container>\n  <ng-template #noQuantityTemplate>\n    <button class=\"btn btn-primary\" (click)=\"addToCart.emit()\">Ajouter au Panier</button>\n  </ng-template>\n</div>\n"
+            "templateData": "<div class=\"d-grid\">\n  <ng-container *ngIf=\"quantity; else noQuantityTemplate\">\n    <div class=\"row g-0 bg-light border rounded\">\n      <button class=\"btn btn-primary col-3\" (click)=\"removeFromCart.emit()\">-</button>\n      <div class=\"col text-center d-flex flex-column justify-content-center align-items-center\">\n        <div>{{ quantity }}</div>\n      </div>\n      <button class=\"btn btn-primary col-3\" (click)=\"addToCart.emit()\">+</button>\n    </div>\n  </ng-container>\n  <ng-template #noQuantityTemplate>\n    <button class=\"btn btn-primary\" (click)=\"addToCart.emit()\">Ajouter au Panier</button>\n  </ng-template>\n</div>\n"
         },
         {
             "name": "BooksSearchComponent",
-            "id": "component-BooksSearchComponent-cc19994eaff2f4ea0256c7a4291a4fcf",
+            "id": "component-BooksSearchComponent-1c0378a71fdfd2564eec2a0bf9e4f7b5",
             "file": "src/app/books/containers/books-search/books-search.component.ts",
             "changeDetection": "ChangeDetectionStrategy.OnPush",
             "encapsulation": [],
@@ -721,7 +783,7 @@
             "description": "",
             "rawdescription": "",
             "type": "component",
-            "sourceCode": "import { ChangeDetectionStrategy, Component } from '@angular/core';\nimport { Store } from '@ngrx/store';\nimport { Observable } from 'rxjs';\n\nimport { Book } from '../../../api/books';\nimport { BooksService } from '../../../api/books.service';\nimport * as FromRoot from '../../../app.state';\nimport { addToCart, removeFromCart } from '../../store/books-search.actions';\nimport { ShoppingCartItem } from '../../../shopping-cart/store/shopping-cart';\n\n@Component({\n  selector: 'app-books-search',\n  templateUrl: './books-search.component.html',\n  styleUrls: ['./books-search.component.scss'],\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class BooksSearchComponent {\n\n  _books$: Observable<Book[]>;\n  _searchText: string = '';\n\n  constructor(\n    private _store: Store<FromRoot.AppState>,\n    private _booksService: BooksService,\n  ) {\n    this._books$ = this._booksService.getAllBooks();\n  }\n\n  onAddToCart(book: Book): void {\n    this._store.dispatch(addToCart(book));\n  }\n\n  onRemoveFromCart(book: Book): void {\n    this._store.dispatch(removeFromCart(book));\n  }\n\n  getShoppingCartItemQuantity(isbn: string): Observable<number> {\n    return this._store.select(FromRoot.getShoppingCartItemQuantity(isbn));\n  }\n\n}\n",
+            "sourceCode": "import { ChangeDetectionStrategy, Component } from '@angular/core';\nimport { Store } from '@ngrx/store';\nimport { Observable } from 'rxjs';\n\nimport { Book } from '../../models/books';\nimport { BooksService } from '../../services/books.service';\nimport { AppState } from '../../../app.state';\nimport * as FromShoppingCart from '../../../shopping-cart/store/shopping-cart.selectors';\nimport { addToCart, removeFromCart } from '../../../shopping-cart/store/shopping-cart.actions';\n\n@Component({\n  selector: 'app-books-search',\n  templateUrl: './books-search.component.html',\n  styleUrls: ['./books-search.component.scss'],\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class BooksSearchComponent {\n\n  _books$: Observable<Book[]>;\n  _searchText: string = '';\n\n  constructor(\n    private _store: Store<AppState>,\n    private _booksService: BooksService,\n  ) {\n    this._books$ = this._booksService.getAllBooks();\n  }\n\n  onAddToCart(book: Book): void {\n    this._store.dispatch(addToCart(book));\n  }\n\n  onRemoveFromCart(book: Book): void {\n    this._store.dispatch(removeFromCart(book));\n  }\n\n  getShoppingCartItemQuantity(isbn: string): Observable<number> {\n    return this._store.select(FromShoppingCart.getShoppingCartItemQuantity(isbn));\n  }\n\n}\n",
             "assetsDirs": [],
             "styleUrlsData": [
                 {
@@ -736,7 +798,7 @@
                 "args": [
                     {
                         "name": "_store",
-                        "type": "Store<FromRoot.AppState>"
+                        "type": "Store<AppState>"
                     },
                     {
                         "name": "_booksService",
@@ -747,7 +809,7 @@
                 "jsdoctags": [
                     {
                         "name": "_store",
-                        "type": "Store<FromRoot.AppState>",
+                        "type": "Store<AppState>",
                         "tagName": {
                             "text": "param"
                         }
@@ -765,7 +827,7 @@
         },
         {
             "name": "HeaderComponent",
-            "id": "component-HeaderComponent-8ce5752716c3bca42c52faca8f35b372",
+            "id": "component-HeaderComponent-8bb99160f6681248dd8e7daae6160c70",
             "file": "src/app/core/header/header.component.ts",
             "changeDetection": "ChangeDetectionStrategy.OnPush",
             "encapsulation": [],
@@ -782,24 +844,23 @@
                 "./header.component.html"
             ],
             "viewProviders": [],
-            "inputsClass": [],
-            "outputsClass": [],
-            "propertiesClass": [
+            "inputsClass": [
                 {
-                    "name": "_itemsCount$",
-                    "type": "Observable<number>",
-                    "optional": false,
-                    "description": "",
-                    "line": 15
+                    "name": "itemsCount",
+                    "defaultValue": "0",
+                    "line": 12,
+                    "type": "number"
                 }
             ],
+            "outputsClass": [],
+            "propertiesClass": [],
             "methodsClass": [],
             "hostBindings": [],
             "hostListeners": [],
             "description": "",
             "rawdescription": "",
             "type": "component",
-            "sourceCode": "import { ChangeDetectionStrategy, Component } from '@angular/core';\nimport { Store } from '@ngrx/store';\nimport { Observable } from 'rxjs';\n\nimport * as FromRoot from '../../app.state';\n\n@Component({\n  selector: 'app-header',\n  templateUrl: './header.component.html',\n  styleUrls: ['./header.component.scss'],\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class HeaderComponent {\n\n  _itemsCount$: Observable<number>;\n\n  constructor(private _store: Store<FromRoot.AppState>) {\n    this._itemsCount$ = this._store.select(FromRoot.getShoppingCartItemsCount);\n  }\n\n}\n",
+            "sourceCode": "import { ChangeDetectionStrategy, Component, Input } from '@angular/core';\n\n@Component({\n  selector: 'app-header',\n  templateUrl: './header.component.html',\n  styleUrls: ['./header.component.scss'],\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class HeaderComponent {\n\n  @Input()\n  itemsCount: number = 0;\n\n}\n",
             "assetsDirs": [],
             "styleUrlsData": [
                 {
@@ -808,31 +869,11 @@
                 }
             ],
             "stylesData": "",
-            "constructorObj": {
-                "name": "constructor",
-                "description": "",
-                "args": [
-                    {
-                        "name": "_store",
-                        "type": "Store<FromRoot.AppState>"
-                    }
-                ],
-                "line": 15,
-                "jsdoctags": [
-                    {
-                        "name": "_store",
-                        "type": "Store<FromRoot.AppState>",
-                        "tagName": {
-                            "text": "param"
-                        }
-                    }
-                ]
-            },
-            "templateData": "<header class=\"navbar navbar-light bg-white sticky-top border-bottom\">\n  <div class=\"container-fluid\">\n    <a class=\"navbar-brand\" routerLink=\"/\">Henri Potier Store</a>\n\n    <a class=\"btn btn-outline-primary\" routerLink=\"/shopping-cart\"><span *ngIf=\"_itemsCount$ | async as itemsCount\" class=\"badge rounded-pill bg-primary\">{{ itemsCount }}</span> Panier</a>\n  </div>\n</header>\n"
+            "templateData": "<header class=\"navbar navbar-light bg-white sticky-top border-bottom\">\n  <div class=\"container-fluid\">\n    <a class=\"navbar-brand\" routerLink=\"/\">Henri Potier Store</a>\n\n    <a class=\"btn btn-outline-primary\" routerLink=\"/shopping-cart\"><span *ngIf=\"itemsCount\" class=\"items-count badge rounded-pill bg-primary\">{{ itemsCount }}</span> Panier</a>\n  </div>\n</header>\n"
         },
         {
             "name": "ShoppingCartComponent",
-            "id": "component-ShoppingCartComponent-829f64e219ee8d4d37069299e3f06944",
+            "id": "component-ShoppingCartComponent-9c42056cdd7fe52aaf22b2ff98772286",
             "file": "src/app/shopping-cart/containers/shopping-cart-summary/shopping-cart.component.ts",
             "changeDetection": "ChangeDetectionStrategy.OnPush",
             "encapsulation": [],
@@ -857,6 +898,13 @@
                     "type": "Observable<BestOffer>",
                     "optional": false,
                     "description": "",
+                    "line": 24
+                },
+                {
+                    "name": "_itemsCount$",
+                    "type": "Observable<number>",
+                    "optional": false,
+                    "description": "",
                     "line": 22
                 },
                 {
@@ -864,14 +912,14 @@
                     "type": "Observable<ShoppingCartItem[]>",
                     "optional": false,
                     "description": "",
-                    "line": 20
+                    "line": 21
                 },
                 {
                     "name": "_totalPrice$",
                     "type": "Observable<number>",
                     "optional": false,
                     "description": "",
-                    "line": 21
+                    "line": 23
                 }
             ],
             "methodsClass": [],
@@ -880,7 +928,7 @@
             "description": "",
             "rawdescription": "",
             "type": "component",
-            "sourceCode": "import { ChangeDetectionStrategy, Component } from '@angular/core';\nimport { Store } from '@ngrx/store';\nimport { combineLatest, Observable } from 'rxjs';\nimport { map, switchMap } from 'rxjs/operators';\n\nimport { ShoppingCartItem } from '../../store/shopping-cart';\nimport * as FromRoot from '../../../app.state';\nimport { BooksService } from '../../../api/books.service';\nimport { CommercialOffers } from '../../../api/books';\nimport { ShoppingCartService, BestOffer } from '../../services/shopping-cart.service';\n\n@Component({\n  selector: 'app-shopping-cart',\n  templateUrl: './shopping-cart.component.html',\n  styleUrls: ['./shopping-cart.component.scss'],\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class ShoppingCartComponent {\n\n  _shoppingCartItems$: Observable<ShoppingCartItem[]>;\n  _totalPrice$: Observable<number>;\n  _bestOffer$: Observable<BestOffer>;\n\n  constructor(\n    private _store: Store<FromRoot.AppState>,\n    private _shoppingCartService: ShoppingCartService,\n    private _booksService: BooksService\n  ) {\n    this._shoppingCartItems$ = this._store.select(FromRoot.getShoppingCartItems);\n    this._totalPrice$ = this._store.select(FromRoot.getTotalPrice);\n\n    const offers$: Observable<CommercialOffers> = this._shoppingCartItems$\n      .pipe(\n        switchMap(items => this._booksService.getCommercialOffers(items.map(i => i.book.isbn)))\n      );\n\n    this._bestOffer$ = combineLatest([\n        this._totalPrice$,\n        offers$\n      ])\n      .pipe(\n        map(([total, { offers }]) => this._shoppingCartService.getBestOffer(total, offers))\n      );\n  }\n\n}\n",
+            "sourceCode": "import { ChangeDetectionStrategy, Component } from '@angular/core';\nimport { Store } from '@ngrx/store';\nimport { combineLatest, Observable } from 'rxjs';\nimport { map, switchMap } from 'rxjs/operators';\n\nimport { ShoppingCartItem } from '../../models/shopping-cart';\nimport * as FromShoppingCart from '../../store/shopping-cart.selectors';\nimport { AppState } from '../../../app.state';\nimport { BestOffer, CommercialOffers } from '../../models/commercial-offers';\nimport { ShoppingCartService } from '../../services/shopping-cart.service';\nimport { CommercialOffersService } from '../../services/commercial-offers.service';\n\n@Component({\n  selector: 'app-shopping-cart',\n  templateUrl: './shopping-cart.component.html',\n  styleUrls: ['./shopping-cart.component.scss'],\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class ShoppingCartComponent {\n\n  _shoppingCartItems$: Observable<ShoppingCartItem[]>;\n  _itemsCount$: Observable<number>;\n  _totalPrice$: Observable<number>;\n  _bestOffer$: Observable<BestOffer>;\n\n  constructor(\n    private _store: Store<AppState>,\n    private _shoppingCartService: ShoppingCartService,\n    private _commercialOffersService: CommercialOffersService\n  ) {\n    this._shoppingCartItems$ = this._store.select(FromShoppingCart.getShoppingCartItems);\n    this._itemsCount$ = this._store.select(FromShoppingCart.getShoppingCartItemsCount);\n    this._totalPrice$ = this._store.select(FromShoppingCart.getTotalPrice);\n\n    const offers$: Observable<CommercialOffers> = this._shoppingCartItems$\n      .pipe(\n        switchMap(items => this._commercialOffersService.getCommercialOffers(items.map(i => i.book.isbn)))\n      );\n\n    this._bestOffer$ = combineLatest([\n        this._totalPrice$,\n        offers$\n      ])\n      .pipe(\n        map(([total, { offers }]) => this._shoppingCartService.getBestOffer(total, offers))\n      );\n  }\n\n}\n",
             "assetsDirs": [],
             "styleUrlsData": [
                 {
@@ -895,22 +943,22 @@
                 "args": [
                     {
                         "name": "_store",
-                        "type": "Store<FromRoot.AppState>"
+                        "type": "Store<AppState>"
                     },
                     {
                         "name": "_shoppingCartService",
                         "type": "ShoppingCartService"
                     },
                     {
-                        "name": "_booksService",
-                        "type": "BooksService"
+                        "name": "_commercialOffersService",
+                        "type": "CommercialOffersService"
                     }
                 ],
-                "line": 22,
+                "line": 24,
                 "jsdoctags": [
                     {
                         "name": "_store",
-                        "type": "Store<FromRoot.AppState>",
+                        "type": "Store<AppState>",
                         "tagName": {
                             "text": "param"
                         }
@@ -923,19 +971,19 @@
                         }
                     },
                     {
-                        "name": "_booksService",
-                        "type": "BooksService",
+                        "name": "_commercialOffersService",
+                        "type": "CommercialOffersService",
                         "tagName": {
                             "text": "param"
                         }
                     }
                 ]
             },
-            "templateData": "<div class=\"row my-4\">\n  <div class=\"card col-md-8\">\n    <div class=\"card-body\">\n      <h4 class=\"card-title\">Panier</h4>\n      <ng-container *ngIf=\"_shoppingCartItems$ | async as items\">\n        <ng-container *ngIf=\"items.length > 0; else emptyCartTemplate\">\n\n          <app-shopping-cart-summary [items]=\"items\"\n                                     [total]=\"_totalPrice$ | async\"\n                                     [bestOffer]=\"_bestOffer$ | async\">\n          </app-shopping-cart-summary>\n\n        </ng-container>\n\n        <ng-template #emptyCartTemplate>\n          Votre panier est vide\n        </ng-template>\n      </ng-container>\n    </div>\n  </div>\n</div>\n"
+            "templateData": "<div class=\"row my-4\">\n  <div class=\"card col-md-8\">\n    <div class=\"card-body\">\n      <h4 class=\"card-title\">Panier ({{ _itemsCount$ | async }} Livres)</h4>\n      <ng-container *ngIf=\"_shoppingCartItems$ | async as items\">\n        <ng-container *ngIf=\"items.length > 0; else emptyCartTemplate\">\n\n          <app-shopping-cart-summary [items]=\"items\"\n                                     [total]=\"_totalPrice$ | async\"\n                                     [bestOffer]=\"_bestOffer$ | async\">\n          </app-shopping-cart-summary>\n\n        </ng-container>\n\n        <ng-template #emptyCartTemplate>\n          Votre panier est vide\n        </ng-template>\n      </ng-container>\n    </div>\n  </div>\n</div>\n"
         },
         {
             "name": "ShoppingCartSummaryComponent",
-            "id": "component-ShoppingCartSummaryComponent-01d391f78ae72e54ccd574c1b176cb07",
+            "id": "component-ShoppingCartSummaryComponent-d0274a8d5b32ab6918ee4f4ed34342fb",
             "file": "src/app/shopping-cart/components/shopping-cart-summary/shopping-cart-summary.component.ts",
             "changeDetection": "ChangeDetectionStrategy.OnPush",
             "encapsulation": [],
@@ -979,7 +1027,7 @@
             "description": "",
             "rawdescription": "",
             "type": "component",
-            "sourceCode": "import { ChangeDetectionStrategy, Component, Input } from '@angular/core';\n\nimport { BestOffer } from '../../services/shopping-cart.service';\nimport { ShoppingCartItem } from '../../store/shopping-cart';\n\n@Component({\n  selector: 'app-shopping-cart-summary',\n  templateUrl: './shopping-cart-summary.component.html',\n  styleUrls: ['./shopping-cart-summary.component.scss'],\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class ShoppingCartSummaryComponent {\n\n  @Input()\n  items: ShoppingCartItem[] = [];\n\n  @Input()\n  total: number | null = 0;\n\n  @Input()\n  bestOffer?: BestOffer | null;\n\n  get finalPrice(): number | null {\n    if (this.bestOffer && this.total) {\n      return this.total - this.bestOffer.discount;\n    } else {\n      return this.total;\n    }\n  }\n\n  constructor() { }\n}\n",
+            "sourceCode": "import { ChangeDetectionStrategy, Component, Input } from '@angular/core';\n\nimport { BestOffer } from '../../models/commercial-offers';\nimport { ShoppingCartItem } from '../../models/shopping-cart';\n\n@Component({\n  selector: 'app-shopping-cart-summary',\n  templateUrl: './shopping-cart-summary.component.html',\n  styleUrls: ['./shopping-cart-summary.component.scss'],\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class ShoppingCartSummaryComponent {\n\n  @Input()\n  items: ShoppingCartItem[] = [];\n\n  @Input()\n  total: number | null = 0;\n\n  @Input()\n  bestOffer?: BestOffer | null;\n\n  get finalPrice(): number | null {\n    if (this.bestOffer && this.total) {\n      return this.total - this.bestOffer.discount;\n    } else {\n      return this.total;\n    }\n  }\n\n  constructor() { }\n}\n",
             "assetsDirs": [],
             "styleUrlsData": [
                 {
@@ -1270,6 +1318,14 @@
                 "name": "actionsData",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
+                "file": "src/app/books/components/book-card/book-card.stories.ts",
+                "type": "object",
+                "defaultValue": "{\n  addToCart: action('addToCart'),\n  removeFromCart: action('removeFromCart'),\n}"
+            },
+            {
+                "name": "actionsData",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
                 "file": "src/app/books/components/book-card/book-quantity/book-quantity.stories.ts",
                 "type": "object",
                 "defaultValue": "{\n  addToCart: action('addToCart'),\n  removeFromCart: action('removeFromCart'),\n}"
@@ -1278,7 +1334,7 @@
                 "name": "addToCart",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
-                "file": "src/app/books/store/books-search.actions.ts",
+                "file": "src/app/shopping-cart/store/shopping-cart.actions.ts",
                 "type": "",
                 "defaultValue": "createAction(\n  '[Books Search Page] Add to Cart',\n  props<Book>()\n)"
             },
@@ -1302,7 +1358,7 @@
                 "name": "Default",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
-                "file": "src/app/core/header/header.stories.ts",
+                "file": "src/app/books/components/book-card/book-card.stories.ts",
                 "type": "",
                 "defaultValue": "Template.bind({})"
             },
@@ -1342,7 +1398,7 @@
                 "name": "getShoppingCartItemQuantity",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
-                "file": "src/app/app.state.ts",
+                "file": "src/app/shopping-cart/store/shopping-cart.selectors.ts",
                 "type": "",
                 "defaultValue": "(isbn: string) => {\n  return createSelector(\n    getShoppingCartState,\n    (shoppingCartState: ShoppingCartState) => {\n      const item = shoppingCartState.items.find(i => i.book.isbn === isbn);\n\n      if (item) {\n        return item.quantity;\n      } else {\n        return 0;\n      }\n    }\n  );\n}"
             },
@@ -1350,7 +1406,7 @@
                 "name": "getShoppingCartItems",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
-                "file": "src/app/app.state.ts",
+                "file": "src/app/shopping-cart/store/shopping-cart.selectors.ts",
                 "type": "",
                 "defaultValue": "createSelector(\n  getShoppingCartState,\n  (shoppingCartState: ShoppingCartState) => shoppingCartState.items\n)"
             },
@@ -1358,7 +1414,7 @@
                 "name": "getShoppingCartItemsCount",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
-                "file": "src/app/app.state.ts",
+                "file": "src/app/shopping-cart/store/shopping-cart.selectors.ts",
                 "type": "",
                 "defaultValue": "createSelector(\n  getShoppingCartState,\n  (shoppingCartState: ShoppingCartState) => {\n    return shoppingCartState.items.reduce((acc, item) => acc + item.quantity, 0);\n  }\n)"
             },
@@ -1366,7 +1422,7 @@
                 "name": "getShoppingCartState",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
-                "file": "src/app/app.state.ts",
+                "file": "src/app/shopping-cart/store/shopping-cart.selectors.ts",
                 "type": "",
                 "defaultValue": "(state: AppState) => state.shoppingCart"
             },
@@ -1374,7 +1430,7 @@
                 "name": "getTotalPrice",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
-                "file": "src/app/app.state.ts",
+                "file": "src/app/shopping-cart/store/shopping-cart.selectors.ts",
                 "type": "",
                 "defaultValue": "createSelector(\n  getShoppingCartItems,\n  (items: ShoppingCartItem[]) => items.reduce((acc, item) => acc + (item.quantity * item.book.price), 0)\n)"
             },
@@ -1382,7 +1438,7 @@
                 "name": "initialState",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
-                "file": "src/app/shopping-cart/store/shopping-cart.reducer.ts",
+                "file": "src/app/shopping-cart/store/shopping-cart.state.ts",
                 "type": "ShoppingCartState",
                 "defaultValue": "{\n  items: []\n}"
             },
@@ -1390,7 +1446,7 @@
                 "name": "removeFromCart",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
-                "file": "src/app/books/store/books-search.actions.ts",
+                "file": "src/app/shopping-cart/store/shopping-cart.actions.ts",
                 "type": "",
                 "defaultValue": "createAction(\n  '[Books Search Page] Remove from Cart',\n  props<Book>()\n)"
             },
@@ -1407,15 +1463,15 @@
                 "subtype": "variable",
                 "file": "src/app/shopping-cart/store/shopping-cart.reducer.ts",
                 "type": "",
-                "defaultValue": "createReducer(\n  initialState,\n  on(BooksSearchPageActions.addToCart, (state, book) => {\n    const index = state.items.findIndex(item => item.book.isbn === book.isbn);\n\n    if (index >= 0) {\n      return {\n        ...state,\n        items: [\n          ...state.items.slice(0, index),\n          {\n            book,\n            quantity: state.items[index].quantity + 1\n          },\n          ...state.items.slice(index + 1)\n        ]\n      };\n    } else {\n      return {\n        ...state,\n        items: [\n          ...state.items,\n          {\n            book,\n            quantity: 1\n          }\n        ]\n      };\n    }\n  }),\n  on(BooksSearchPageActions.removeFromCart, (state, book) => {\n    const index = state.items.findIndex(item => item.book.isbn === book.isbn);\n\n    if (index >= 0) {\n      if (state.items[index].quantity - 1 === 0) {\n        return {\n          ...state,\n          items: [\n            ...state.items.slice(0, index),\n            ...state.items.slice(index + 1)\n          ]\n        };\n      } else {\n        return {\n          ...state,\n          items: [\n            ...state.items.slice(0, index),\n            {\n              book,\n              quantity: state.items[index].quantity - 1\n            },\n            ...state.items.slice(index + 1)\n          ]\n        };\n      }\n    } else {\n      return state;\n    }\n  })\n)"
+                "defaultValue": "createReducer(\n  initialState,\n  on(ShoppingCartActions.addToCart, (state, book) => {\n    const index = state.items.findIndex(item => item.book.isbn === book.isbn);\n\n    if (index >= 0) {\n      return {\n        ...state,\n        items: [\n          ...state.items.slice(0, index),\n          {\n            book,\n            quantity: state.items[index].quantity + 1\n          },\n          ...state.items.slice(index + 1)\n        ]\n      };\n    } else {\n      return {\n        ...state,\n        items: [\n          ...state.items,\n          {\n            book,\n            quantity: 1\n          }\n        ]\n      };\n    }\n  }),\n  on(ShoppingCartActions.removeFromCart, (state, book) => {\n    const index = state.items.findIndex(item => item.book.isbn === book.isbn);\n\n    if (index >= 0) {\n      if (state.items[index].quantity - 1 === 0) {\n        return {\n          ...state,\n          items: [\n            ...state.items.slice(0, index),\n            ...state.items.slice(index + 1)\n          ]\n        };\n      } else {\n        return {\n          ...state,\n          items: [\n            ...state.items.slice(0, index),\n            {\n              book,\n              quantity: state.items[index].quantity - 1\n            },\n            ...state.items.slice(index + 1)\n          ]\n        };\n      }\n    } else {\n      return state;\n    }\n  })\n)"
             },
             {
                 "name": "Template",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
-                "file": "src/app/core/header/header.stories.ts",
-                "type": "Story<HeaderComponent>",
-                "defaultValue": "args => ({\n  props: {\n    ...args\n  }\n})"
+                "file": "src/app/books/components/book-card/book-card.stories.ts",
+                "type": "Story<BookCardComponent>",
+                "defaultValue": "args => ({\n  props: {\n    ...args,\n    addToCart: actionsData.addToCart,\n    removeFromCart: actionsData.removeFromCart\n  }\n})"
             },
             {
                 "name": "Template",
@@ -1432,6 +1488,14 @@
                 "file": "src/app/books/components/book-card/book-quantity/book-quantity.stories.ts",
                 "type": "Story<BookQuantityComponent>",
                 "defaultValue": "args => ({\n  props: {\n    ...args,\n    addToCart: actionsData.addToCart,\n    removeFromCart: actionsData.removeFromCart\n  }\n})"
+            },
+            {
+                "name": "WithQuantity",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "src/app/books/components/book-card/book-card.stories.ts",
+                "type": "",
+                "defaultValue": "Template.bind({})"
             },
             {
                 "name": "WithQuantity",
@@ -1479,13 +1543,47 @@
                 "ctype": "miscellaneous",
                 "subtype": "typealias",
                 "rawtype": "PercentageOffer | MinusOffer | SliceOffer",
-                "file": "src/app/api/books.ts",
+                "file": "src/app/shopping-cart/models/commercial-offers.ts",
                 "description": "",
                 "kind": 168
             }
         ],
         "enumerations": [],
         "groupedVariables": {
+            "src/app/books/components/book-card/book-card.stories.ts": [
+                {
+                    "name": "actionsData",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "src/app/books/components/book-card/book-card.stories.ts",
+                    "type": "object",
+                    "defaultValue": "{\n  addToCart: action('addToCart'),\n  removeFromCart: action('removeFromCart'),\n}"
+                },
+                {
+                    "name": "Default",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "src/app/books/components/book-card/book-card.stories.ts",
+                    "type": "",
+                    "defaultValue": "Template.bind({})"
+                },
+                {
+                    "name": "Template",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "src/app/books/components/book-card/book-card.stories.ts",
+                    "type": "Story<BookCardComponent>",
+                    "defaultValue": "args => ({\n  props: {\n    ...args,\n    addToCart: actionsData.addToCart,\n    removeFromCart: actionsData.removeFromCart\n  }\n})"
+                },
+                {
+                    "name": "WithQuantity",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "src/app/books/components/book-card/book-card.stories.ts",
+                    "type": "",
+                    "defaultValue": "Template.bind({})"
+                }
+            ],
             "src/app/books/components/book-card/book-quantity/book-quantity.stories.ts": [
                 {
                     "name": "actionsData",
@@ -1520,12 +1618,12 @@
                     "defaultValue": "Template.bind({})"
                 }
             ],
-            "src/app/books/store/books-search.actions.ts": [
+            "src/app/shopping-cart/store/shopping-cart.actions.ts": [
                 {
                     "name": "addToCart",
                     "ctype": "miscellaneous",
                     "subtype": "variable",
-                    "file": "src/app/books/store/books-search.actions.ts",
+                    "file": "src/app/shopping-cart/store/shopping-cart.actions.ts",
                     "type": "",
                     "defaultValue": "createAction(\n  '[Books Search Page] Add to Cart',\n  props<Book>()\n)"
                 },
@@ -1533,7 +1631,7 @@
                     "name": "removeFromCart",
                     "ctype": "miscellaneous",
                     "subtype": "variable",
-                    "file": "src/app/books/store/books-search.actions.ts",
+                    "file": "src/app/shopping-cart/store/shopping-cart.actions.ts",
                     "type": "",
                     "defaultValue": "createAction(\n  '[Books Search Page] Remove from Cart',\n  props<Book>()\n)"
                 }
@@ -1581,24 +1679,6 @@
                     "type": "literal type"
                 }
             ],
-            "src/app/core/header/header.stories.ts": [
-                {
-                    "name": "Default",
-                    "ctype": "miscellaneous",
-                    "subtype": "variable",
-                    "file": "src/app/core/header/header.stories.ts",
-                    "type": "",
-                    "defaultValue": "Template.bind({})"
-                },
-                {
-                    "name": "Template",
-                    "ctype": "miscellaneous",
-                    "subtype": "variable",
-                    "file": "src/app/core/header/header.stories.ts",
-                    "type": "Story<HeaderComponent>",
-                    "defaultValue": "args => ({\n  props: {\n    ...args\n  }\n})"
-                }
-            ],
             "src/environments/environment.prod.ts": [
                 {
                     "name": "environment",
@@ -1619,12 +1699,12 @@
                     "defaultValue": "{\n  production: false\n}"
                 }
             ],
-            "src/app/app.state.ts": [
+            "src/app/shopping-cart/store/shopping-cart.selectors.ts": [
                 {
                     "name": "getShoppingCartItemQuantity",
                     "ctype": "miscellaneous",
                     "subtype": "variable",
-                    "file": "src/app/app.state.ts",
+                    "file": "src/app/shopping-cart/store/shopping-cart.selectors.ts",
                     "type": "",
                     "defaultValue": "(isbn: string) => {\n  return createSelector(\n    getShoppingCartState,\n    (shoppingCartState: ShoppingCartState) => {\n      const item = shoppingCartState.items.find(i => i.book.isbn === isbn);\n\n      if (item) {\n        return item.quantity;\n      } else {\n        return 0;\n      }\n    }\n  );\n}"
                 },
@@ -1632,7 +1712,7 @@
                     "name": "getShoppingCartItems",
                     "ctype": "miscellaneous",
                     "subtype": "variable",
-                    "file": "src/app/app.state.ts",
+                    "file": "src/app/shopping-cart/store/shopping-cart.selectors.ts",
                     "type": "",
                     "defaultValue": "createSelector(\n  getShoppingCartState,\n  (shoppingCartState: ShoppingCartState) => shoppingCartState.items\n)"
                 },
@@ -1640,7 +1720,7 @@
                     "name": "getShoppingCartItemsCount",
                     "ctype": "miscellaneous",
                     "subtype": "variable",
-                    "file": "src/app/app.state.ts",
+                    "file": "src/app/shopping-cart/store/shopping-cart.selectors.ts",
                     "type": "",
                     "defaultValue": "createSelector(\n  getShoppingCartState,\n  (shoppingCartState: ShoppingCartState) => {\n    return shoppingCartState.items.reduce((acc, item) => acc + item.quantity, 0);\n  }\n)"
                 },
@@ -1648,7 +1728,7 @@
                     "name": "getShoppingCartState",
                     "ctype": "miscellaneous",
                     "subtype": "variable",
-                    "file": "src/app/app.state.ts",
+                    "file": "src/app/shopping-cart/store/shopping-cart.selectors.ts",
                     "type": "",
                     "defaultValue": "(state: AppState) => state.shoppingCart"
                 },
@@ -1656,27 +1736,29 @@
                     "name": "getTotalPrice",
                     "ctype": "miscellaneous",
                     "subtype": "variable",
-                    "file": "src/app/app.state.ts",
+                    "file": "src/app/shopping-cart/store/shopping-cart.selectors.ts",
                     "type": "",
                     "defaultValue": "createSelector(\n  getShoppingCartItems,\n  (items: ShoppingCartItem[]) => items.reduce((acc, item) => acc + (item.quantity * item.book.price), 0)\n)"
                 }
             ],
-            "src/app/shopping-cart/store/shopping-cart.reducer.ts": [
+            "src/app/shopping-cart/store/shopping-cart.state.ts": [
                 {
                     "name": "initialState",
                     "ctype": "miscellaneous",
                     "subtype": "variable",
-                    "file": "src/app/shopping-cart/store/shopping-cart.reducer.ts",
+                    "file": "src/app/shopping-cart/store/shopping-cart.state.ts",
                     "type": "ShoppingCartState",
                     "defaultValue": "{\n  items: []\n}"
-                },
+                }
+            ],
+            "src/app/shopping-cart/store/shopping-cart.reducer.ts": [
                 {
                     "name": "shoppingCartReducer",
                     "ctype": "miscellaneous",
                     "subtype": "variable",
                     "file": "src/app/shopping-cart/store/shopping-cart.reducer.ts",
                     "type": "",
-                    "defaultValue": "createReducer(\n  initialState,\n  on(BooksSearchPageActions.addToCart, (state, book) => {\n    const index = state.items.findIndex(item => item.book.isbn === book.isbn);\n\n    if (index >= 0) {\n      return {\n        ...state,\n        items: [\n          ...state.items.slice(0, index),\n          {\n            book,\n            quantity: state.items[index].quantity + 1\n          },\n          ...state.items.slice(index + 1)\n        ]\n      };\n    } else {\n      return {\n        ...state,\n        items: [\n          ...state.items,\n          {\n            book,\n            quantity: 1\n          }\n        ]\n      };\n    }\n  }),\n  on(BooksSearchPageActions.removeFromCart, (state, book) => {\n    const index = state.items.findIndex(item => item.book.isbn === book.isbn);\n\n    if (index >= 0) {\n      if (state.items[index].quantity - 1 === 0) {\n        return {\n          ...state,\n          items: [\n            ...state.items.slice(0, index),\n            ...state.items.slice(index + 1)\n          ]\n        };\n      } else {\n        return {\n          ...state,\n          items: [\n            ...state.items.slice(0, index),\n            {\n              book,\n              quantity: state.items[index].quantity - 1\n            },\n            ...state.items.slice(index + 1)\n          ]\n        };\n      }\n    } else {\n      return state;\n    }\n  })\n)"
+                    "defaultValue": "createReducer(\n  initialState,\n  on(ShoppingCartActions.addToCart, (state, book) => {\n    const index = state.items.findIndex(item => item.book.isbn === book.isbn);\n\n    if (index >= 0) {\n      return {\n        ...state,\n        items: [\n          ...state.items.slice(0, index),\n          {\n            book,\n            quantity: state.items[index].quantity + 1\n          },\n          ...state.items.slice(index + 1)\n        ]\n      };\n    } else {\n      return {\n        ...state,\n        items: [\n          ...state.items,\n          {\n            book,\n            quantity: 1\n          }\n        ]\n      };\n    }\n  }),\n  on(ShoppingCartActions.removeFromCart, (state, book) => {\n    const index = state.items.findIndex(item => item.book.isbn === book.isbn);\n\n    if (index >= 0) {\n      if (state.items[index].quantity - 1 === 0) {\n        return {\n          ...state,\n          items: [\n            ...state.items.slice(0, index),\n            ...state.items.slice(index + 1)\n          ]\n        };\n      } else {\n        return {\n          ...state,\n          items: [\n            ...state.items.slice(0, index),\n            {\n              book,\n              quantity: state.items[index].quantity - 1\n            },\n            ...state.items.slice(index + 1)\n          ]\n        };\n      }\n    } else {\n      return state;\n    }\n  })\n)"
                 }
             ]
         },
@@ -1715,13 +1797,13 @@
         },
         "groupedEnumerations": {},
         "groupedTypeAliases": {
-            "src/app/api/books.ts": [
+            "src/app/shopping-cart/models/commercial-offers.ts": [
                 {
                     "name": "Offer",
                     "ctype": "miscellaneous",
                     "subtype": "typealias",
                     "rawtype": "PercentageOffer | MinusOffer | SliceOffer",
-                    "file": "src/app/api/books.ts",
+                    "file": "src/app/shopping-cart/models/commercial-offers.ts",
                     "description": "",
                     "kind": 168
                 }
@@ -1798,66 +1880,12 @@
         "status": "low",
         "files": [
             {
-                "filePath": "src/app/api/books.service.ts",
-                "type": "injectable",
-                "linktype": "injectable",
-                "name": "BooksService",
-                "coveragePercent": 0,
-                "coverageCount": "0/5",
-                "status": "low"
-            },
-            {
-                "filePath": "src/app/api/books.ts",
-                "type": "interface",
-                "linktype": "interface",
-                "name": "Book",
-                "coveragePercent": 0,
-                "coverageCount": "0/6",
-                "status": "low"
-            },
-            {
-                "filePath": "src/app/api/books.ts",
-                "type": "interface",
-                "linktype": "interface",
-                "name": "CommercialOffers",
-                "coveragePercent": 0,
-                "coverageCount": "0/2",
-                "status": "low"
-            },
-            {
-                "filePath": "src/app/api/books.ts",
-                "type": "interface",
-                "linktype": "interface",
-                "name": "MinusOffer",
-                "coveragePercent": 0,
-                "coverageCount": "0/3",
-                "status": "low"
-            },
-            {
-                "filePath": "src/app/api/books.ts",
-                "type": "interface",
-                "linktype": "interface",
-                "name": "PercentageOffer",
-                "coveragePercent": 0,
-                "coverageCount": "0/3",
-                "status": "low"
-            },
-            {
-                "filePath": "src/app/api/books.ts",
-                "type": "interface",
-                "linktype": "interface",
-                "name": "SliceOffer",
-                "coveragePercent": 0,
-                "coverageCount": "0/4",
-                "status": "low"
-            },
-            {
                 "filePath": "src/app/app.component.ts",
                 "type": "component",
                 "linktype": "component",
                 "name": "AppComponent",
                 "coveragePercent": 0,
-                "coverageCount": "0/1",
+                "coverageCount": "0/3",
                 "status": "low"
             },
             {
@@ -1870,62 +1898,52 @@
                 "status": "low"
             },
             {
-                "filePath": "src/app/app.state.ts",
-                "type": "variable",
-                "linktype": "miscellaneous",
-                "linksubtype": "variable",
-                "name": "getShoppingCartItemQuantity",
-                "coveragePercent": 0,
-                "coverageCount": "0/1",
-                "status": "low"
-            },
-            {
-                "filePath": "src/app/app.state.ts",
-                "type": "variable",
-                "linktype": "miscellaneous",
-                "linksubtype": "variable",
-                "name": "getShoppingCartItems",
-                "coveragePercent": 0,
-                "coverageCount": "0/1",
-                "status": "low"
-            },
-            {
-                "filePath": "src/app/app.state.ts",
-                "type": "variable",
-                "linktype": "miscellaneous",
-                "linksubtype": "variable",
-                "name": "getShoppingCartItemsCount",
-                "coveragePercent": 0,
-                "coverageCount": "0/1",
-                "status": "low"
-            },
-            {
-                "filePath": "src/app/app.state.ts",
-                "type": "variable",
-                "linktype": "miscellaneous",
-                "linksubtype": "variable",
-                "name": "getShoppingCartState",
-                "coveragePercent": 0,
-                "coverageCount": "0/1",
-                "status": "low"
-            },
-            {
-                "filePath": "src/app/app.state.ts",
-                "type": "variable",
-                "linktype": "miscellaneous",
-                "linksubtype": "variable",
-                "name": "getTotalPrice",
-                "coveragePercent": 0,
-                "coverageCount": "0/1",
-                "status": "low"
-            },
-            {
                 "filePath": "src/app/books/components/book-card/book-card.component.ts",
                 "type": "component",
                 "linktype": "component",
                 "name": "BookCardComponent",
                 "coveragePercent": 0,
                 "coverageCount": "0/5",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/books/components/book-card/book-card.stories.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "actionsData",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/books/components/book-card/book-card.stories.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "Default",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/books/components/book-card/book-card.stories.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "Template",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/books/components/book-card/book-card.stories.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "WithQuantity",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
                 "status": "low"
             },
             {
@@ -1987,6 +2005,15 @@
                 "status": "low"
             },
             {
+                "filePath": "src/app/books/models/books.ts",
+                "type": "interface",
+                "linktype": "interface",
+                "name": "Book",
+                "coveragePercent": 0,
+                "coverageCount": "0/6",
+                "status": "low"
+            },
+            {
                 "filePath": "src/app/books/pipes/search-books.pipe.ts",
                 "type": "pipe",
                 "linktype": "pipe",
@@ -1996,23 +2023,12 @@
                 "status": "low"
             },
             {
-                "filePath": "src/app/books/store/books-search.actions.ts",
-                "type": "variable",
-                "linktype": "miscellaneous",
-                "linksubtype": "variable",
-                "name": "addToCart",
+                "filePath": "src/app/books/services/books.service.ts",
+                "type": "injectable",
+                "linktype": "injectable",
+                "name": "BooksService",
                 "coveragePercent": 0,
-                "coverageCount": "0/1",
-                "status": "low"
-            },
-            {
-                "filePath": "src/app/books/store/books-search.actions.ts",
-                "type": "variable",
-                "linktype": "miscellaneous",
-                "linksubtype": "variable",
-                "name": "removeFromCart",
-                "coveragePercent": 0,
-                "coverageCount": "0/1",
+                "coverageCount": "0/4",
                 "status": "low"
             },
             {
@@ -2021,27 +2037,7 @@
                 "linktype": "component",
                 "name": "HeaderComponent",
                 "coveragePercent": 0,
-                "coverageCount": "0/3",
-                "status": "low"
-            },
-            {
-                "filePath": "src/app/core/header/header.stories.ts",
-                "type": "variable",
-                "linktype": "miscellaneous",
-                "linksubtype": "variable",
-                "name": "Default",
-                "coveragePercent": 0,
-                "coverageCount": "0/1",
-                "status": "low"
-            },
-            {
-                "filePath": "src/app/core/header/header.stories.ts",
-                "type": "variable",
-                "linktype": "miscellaneous",
-                "linksubtype": "variable",
-                "name": "Template",
-                "coveragePercent": 0,
-                "coverageCount": "0/1",
+                "coverageCount": "0/2",
                 "status": "low"
             },
             {
@@ -2089,20 +2085,11 @@
                 "linktype": "component",
                 "name": "ShoppingCartComponent",
                 "coveragePercent": 0,
-                "coverageCount": "0/5",
+                "coverageCount": "0/6",
                 "status": "low"
             },
             {
-                "filePath": "src/app/shopping-cart/services/shopping-cart.service.ts",
-                "type": "injectable",
-                "linktype": "injectable",
-                "name": "ShoppingCartService",
-                "coveragePercent": 0,
-                "coverageCount": "0/4",
-                "status": "low"
-            },
-            {
-                "filePath": "src/app/shopping-cart/services/shopping-cart.service.ts",
+                "filePath": "src/app/shopping-cart/models/commercial-offers.ts",
                 "type": "interface",
                 "linktype": "interface",
                 "name": "BestOffer",
@@ -2111,12 +2098,86 @@
                 "status": "low"
             },
             {
-                "filePath": "src/app/shopping-cart/store/shopping-cart.reducer.ts",
+                "filePath": "src/app/shopping-cart/models/commercial-offers.ts",
                 "type": "interface",
                 "linktype": "interface",
-                "name": "ShoppingCartState",
+                "name": "CommercialOffers",
                 "coveragePercent": 0,
                 "coverageCount": "0/2",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/shopping-cart/models/commercial-offers.ts",
+                "type": "interface",
+                "linktype": "interface",
+                "name": "MinusOffer",
+                "coveragePercent": 0,
+                "coverageCount": "0/3",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/shopping-cart/models/commercial-offers.ts",
+                "type": "interface",
+                "linktype": "interface",
+                "name": "PercentageOffer",
+                "coveragePercent": 0,
+                "coverageCount": "0/3",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/shopping-cart/models/commercial-offers.ts",
+                "type": "interface",
+                "linktype": "interface",
+                "name": "SliceOffer",
+                "coveragePercent": 0,
+                "coverageCount": "0/4",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/shopping-cart/models/shopping-cart.ts",
+                "type": "interface",
+                "linktype": "interface",
+                "name": "ShoppingCartItem",
+                "coveragePercent": 0,
+                "coverageCount": "0/3",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/shopping-cart/services/commercial-offers.service.ts",
+                "type": "injectable",
+                "linktype": "injectable",
+                "name": "CommercialOffersService",
+                "coveragePercent": 0,
+                "coverageCount": "0/4",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/shopping-cart/services/shopping-cart.service.ts",
+                "type": "injectable",
+                "linktype": "injectable",
+                "name": "ShoppingCartService",
+                "coveragePercent": 0,
+                "coverageCount": "0/3",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/shopping-cart/store/shopping-cart.actions.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "addToCart",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/shopping-cart/store/shopping-cart.actions.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "removeFromCart",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
                 "status": "low"
             },
             {
@@ -2133,28 +2194,78 @@
                 "type": "variable",
                 "linktype": "miscellaneous",
                 "linksubtype": "variable",
-                "name": "initialState",
-                "coveragePercent": 0,
-                "coverageCount": "0/1",
-                "status": "low"
-            },
-            {
-                "filePath": "src/app/shopping-cart/store/shopping-cart.reducer.ts",
-                "type": "variable",
-                "linktype": "miscellaneous",
-                "linksubtype": "variable",
                 "name": "shoppingCartReducer",
                 "coveragePercent": 0,
                 "coverageCount": "0/1",
                 "status": "low"
             },
             {
-                "filePath": "src/app/shopping-cart/store/shopping-cart.ts",
+                "filePath": "src/app/shopping-cart/store/shopping-cart.selectors.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "getShoppingCartItemQuantity",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/shopping-cart/store/shopping-cart.selectors.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "getShoppingCartItems",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/shopping-cart/store/shopping-cart.selectors.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "getShoppingCartItemsCount",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/shopping-cart/store/shopping-cart.selectors.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "getShoppingCartState",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/shopping-cart/store/shopping-cart.selectors.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "getTotalPrice",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/shopping-cart/store/shopping-cart.state.ts",
                 "type": "interface",
                 "linktype": "interface",
-                "name": "ShoppingCartItem",
+                "name": "ShoppingCartState",
                 "coveragePercent": 0,
-                "coverageCount": "0/3",
+                "coverageCount": "0/2",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/shopping-cart/store/shopping-cart.state.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "initialState",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
                 "status": "low"
             },
             {

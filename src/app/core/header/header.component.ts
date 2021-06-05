@@ -9,6 +9,6 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 export class HeaderComponent {
 
   @Input()
-  itemsCount: number = 0;
+  itemsCount: number | null = 0;
 
 }
