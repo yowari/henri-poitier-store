@@ -2,7 +2,9 @@
   <div class="row g-0">
 
     <div class="book-item__cover book-cover col-md-2 text-center">
-      <img [src]="book?.cover" class="book-cover__image img-fluid p-2" />
+      <img [src]="book?.cover"
+           class="book-cover__image img-fluid p-2"
+           [alt]="book?.title" />
     </div>
 
     <div class="book-item__info book-info card-body col-md-8">
