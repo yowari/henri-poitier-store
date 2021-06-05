@@ -3,6 +3,8 @@
          type="search"
          placeholder="Rechercher un livre..."
          aria-label="Rechercher un livre"
+         name="searchText"
+         data-cy="searchText"
          [(ngModel)]="_searchText" />
 </div>
 
@@ -11,7 +13,8 @@
                  [book]="book"
                  [quantity]="getShoppingCartItemQuantity(book.isbn) | async"
                  (addToCart)="onAddToCart(book)"
-                 (removeFromCart)="onRemoveFromCart(book)">
+                 (removeFromCart)="onRemoveFromCart(book)"
+                 data-cy="bookItem">
   </app-book-card>
 </ng-container>
 
