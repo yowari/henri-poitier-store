@@ -1,0 +1,31 @@
+<article class="book-item card my-4">
+  <div class="row g-0">
+
+    <div class="book-item__cover book-cover col-md-2 text-center">
+      <img [src]="book?.cover" class="book-cover__image img-fluid p-2" />
+    </div>
+
+    <div class="book-item__info book-info card-body col-md-8">
+      <h5 class="book-info__title card-title">{{ book?.title }}</h5>
+      <div class="book-info__summary overflow-auto">
+        <p *ngFor="let synopsisParagraph of book?.synopsis" class="card-text">
+          {{ synopsisParagraph }}
+        </p>
+      </div>
+    </div>
+
+    <div class="book-item__action book-action col-md-2 border-start p-3">
+      <div class="book-action__price mb-4 fs-5">
+        prix: <strong>{{ book?.price | currency: 'EUR' }}</strong>
+      </div>
+
+      <div class="book-action__add">
+        <app-book-quantity [quantity]="quantity"
+                           (addToCart)="addToCart.emit()"
+                           (removeFromCart)="removeFromCart.emit()">
+        </app-book-quantity>
+      </div>
+    </div>
+
+  </div>
+</article>

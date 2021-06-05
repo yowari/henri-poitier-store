@@ -1,0 +1,7 @@
+<header class="navbar navbar-light bg-white sticky-top border-bottom">
+  <div class="container-fluid">
+    <a class="navbar-brand" routerLink="/">Henri Potier Store</a>
+
+    <a class="btn btn-outline-primary" routerLink="/shopping-cart"><span *ngIf="itemsCount" class="items-count badge rounded-pill bg-primary">{{ itemsCount }}</span> Panier</a>
+  </div>
+</header>
